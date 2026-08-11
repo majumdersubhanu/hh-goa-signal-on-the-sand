@@ -40,6 +40,8 @@ const eslintConfig = defineConfig([
     files: ["app/beach-scene.tsx"],
     rules: {
       "react/no-unknown-property": "off",
+      "react/prop-types": "off",
+      "react-hooks/exhaustive-deps": "off",
       "react-hooks/immutability": "off",
     },
   },

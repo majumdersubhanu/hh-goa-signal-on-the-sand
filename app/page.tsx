@@ -1,619 +1,424 @@
 "use client";
 
-import {
-  ChangeEvent,
-  DragEvent,
-  PointerEvent as ReactPointerEvent,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import dynamic from "next/dynamic";
+import QRCode from "qrcode";
+import { ChangeEvent, DragEvent, KeyboardEvent, useCallback, useMemo, useRef, useState } from "react";
+import BeachScene from "./beach-scene";
 
-const BeachScene = dynamic(
-  () => import("./beach-scene").then((module) => module.BeachScene),
-  {
-    ssr: false,
-    loading: () => <div className="scene-loader"><span>WARMING THE SAND</span></div>,
-  },
-);
-
-type Format = "id" | "pfp" | "team";
+type Format = "id" | "back" | "pfp" | "crew";
+type Stage = 0 | 1 | 2 | 3 | 4;
 
 type Builder = {
-  id: number;
   name: string;
+  social: string;
   stack: string;
-  mission: string;
-  energy: string;
-  ritual: string;
+  mode: string;
+  crew: string;
   photo: string;
   fileName: string;
-  zoom: number;
-  offsetX: number;
-  offsetY: number;
-  classSeed: number;
 };
 
-const BUILDER_CLASSES = [
-  "TIDE SHIPPER",
-  "PALM STACKER",
-  "SUNSET DEBUGGER",
-  "SIGNAL SMITH",
-  "WAVE RUNNER",
-  "SANDCASTLE ARCHITECT",
-  "MONSOON MAKER",
-  "COASTAL OPERATOR",
-  "MIDNIGHT LAUNCHER",
-  "BAREFOOT FOUNDER",
-];
-
-const ENERGIES = ["Hotspot hunter", "Offline architect", "Cable whisperer", "Morale department"];
-const RITUALS = ["Debugging barefoot", "Chasing chai", "Pitching to strangers", "Watching the tide"];
-
-const COLORS = {
-  green: "#0b6839",
-  yellow: "#fee101",
-  pink: "#ff0080",
-  paper: "#fffbe8",
-  ink: "#082f20",
-  sand: "#e6b86b",
-  water: "#58c9c0",
-  coral: "#ff6b43",
+const STACKS = ["AI / ML", "FRONTEND", "BACKEND", "DESIGN", "PRODUCT", "HARDWARE", "WEB3", "WEIRD TECH"];
+const MODES = [
+  ["SHIP IT", "Speed over ceremony"],
+  ["MAKE IT BEAUTIFUL", "Details are the product"],
+  ["BREAK THE IMPOSSIBLE", "Hard problems taste better"],
+  ["CONNECT THE DOTS", "People are the platform"],
+] as const;
+const CREWS = ["SOLO & DANGEROUS", "ARRIVING WITH CREW", "LOOKING FOR MY PEOPLE", "ASK ME WHAT I'M BUILDING"];
+const CLASSES: Record<string, string[]> = {
+  "AI / ML": ["PROMPT ALCHEMIST", "MODEL WHISPERER", "LATENT PIRATE"],
+  FRONTEND: ["PIXEL SURFER", "BROWSER BENDER", "INTERFACE PILOT"],
+  BACKEND: ["SYSTEMS SHAMAN", "API PIRATE", "SERVER TAMER"],
+  DESIGN: ["VIBE ENGINEER", "PIXEL POET", "MOTION MAVERICK"],
+  PRODUCT: ["CHAOS CARTOGRAPHER", "SHIP CAPTAIN", "SIGNAL FINDER"],
+  HARDWARE: ["CIRCUIT SORCERER", "ROBOT WRANGLER", "SOLDER MONK"],
+  WEB3: ["CHAIN NAVIGATOR", "PROTOCOL PIRATE", "WALLET WIZARD"],
+  "WEIRD TECH": ["BEAUTIFUL MISFIT", "GLITCH NATURALIST", "FUTURE FERAL"],
 };
 
-const starterBuilder = (id: number): Builder => ({
-  id,
-  name: "",
-  stack: "",
-  mission: "",
-  energy: "Hotspot hunter",
-  ritual: "Debugging barefoot",
+const GUIDE = [
+  ["01", "GENESIS", "Meet the humans. Find the friction. Leave the comfort zone."],
+  ["02", "THE BET", "Name the problem, the person and why your solution deserves to exist."],
+  ["03", "THE BUILD", "Make the wild idea real. Test it. Break it. Make it undeniable."],
+  ["04", "THE LAUNCH", "Tell the story, ship the proof and show the room what changed."],
+] as const;
+
+const INITIAL: Builder = {
+  name: "YOUR NAME",
+  social: "@yourhandle",
+  stack: "DESIGN",
+  mode: "MAKE IT BEAUTIFUL",
+  crew: "LOOKING FOR MY PEOPLE",
   photo: "",
   fileName: "",
-  zoom: 1,
-  offsetX: 0,
-  offsetY: 0,
-  classSeed: 0,
-});
+};
 
 function hashText(value: string) {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) hash = (hash * 31 + value.charCodeAt(index)) | 0;
-  return Math.abs(hash);
+  return [...value].reduce((sum, char) => ((sum << 5) - sum + char.charCodeAt(0)) | 0, 7);
 }
 
-function getBuilderClass(builder: Builder) {
-  const key = `${builder.name}-${builder.stack}-${builder.energy}-${builder.ritual}-${builder.id}-${builder.classSeed}`;
-  return BUILDER_CLASSES[hashText(key) % BUILDER_CLASSES.length];
+function builderClass(builder: Builder) {
+  const choices = CLASSES[builder.stack] ?? CLASSES["WEIRD TECH"];
+  return choices[Math.abs(hashText(`${builder.name}${builder.mode}`)) % choices.length];
 }
 
-function getAccent(energy: string) {
-  if (energy === "Offline architect") return COLORS.water;
-  if (energy === "Cable whisperer") return COLORS.coral;
-  if (energy === "Morale department") return COLORS.yellow;
-  return COLORS.pink;
+function builderId(builder: Builder) {
+  return `GOA-${String(Math.abs(hashText(`${builder.name}${builder.social}`)) % 10000).padStart(4, "0")}`;
 }
 
-function PalmMark({ side }: { side: "left" | "right" }) {
-  return (
-    <span className={`palm palm--${side}`} aria-hidden="true">
-      <i className="palm__trunk" />
-      <i className="palm__leaf palm__leaf--1" />
-      <i className="palm__leaf palm__leaf--2" />
-      <i className="palm__leaf palm__leaf--3" />
-      <i className="palm__leaf palm__leaf--4" />
-      <i className="palm__leaf palm__leaf--5" />
-    </span>
-  );
+function socialDetails(value: string) {
+  const clean = value.trim();
+  if (!clean) return { label: "YOUR SIGNAL", value: "@yourhandle", url: "https://hhgoa.com" };
+  if (clean.startsWith("@")) return { label: "X / TWITTER", value: clean, url: `https://x.com/${clean.slice(1)}` };
+  const withProtocol = /^https?:\/\//i.test(clean) ? clean : `https://${clean}`;
+  try {
+    const parsed = new URL(withProtocol);
+    const host = parsed.hostname.replace(/^www\./, "");
+    if (host.includes("github.com")) return { label: "GITHUB", value: `@${parsed.pathname.split("/").filter(Boolean)[0] || "builder"}`, url: parsed.href };
+    if (host.includes("linkedin.com")) return { label: "LINKEDIN", value: parsed.pathname.split("/").filter(Boolean).pop() || clean, url: parsed.href };
+    return { label: "FIND ME AT", value: clean.replace(/^https?:\/\//, ""), url: parsed.href };
+  } catch {
+    return { label: "FIND ME AT", value: clean, url: "https://hhgoa.com" };
+  }
 }
 
-function loadImage(source: string) {
+function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
     image.onerror = reject;
-    image.src = source;
+    image.src = src;
   });
 }
 
-function drawCover(
-  context: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  zoom: number,
-  offsetX: number,
-  offsetY: number,
-) {
-  const baseScale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-  const scale = baseScale * zoom;
-  const sourceWidth = width / scale;
-  const sourceHeight = height / scale;
-  const maxX = Math.max(0, image.naturalWidth - sourceWidth);
-  const maxY = Math.max(0, image.naturalHeight - sourceHeight);
-  const sourceX = Math.min(maxX, Math.max(0, maxX / 2 - (offsetX / 100) * maxX));
-  const sourceY = Math.min(maxY, Math.max(0, maxY / 2 - (offsetY / 100) * maxY));
-  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+function cutPath(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, cut = 44) {
+  ctx.beginPath();
+  ctx.moveTo(x + cut, y);
+  ctx.lineTo(x + width, y);
+  ctx.lineTo(x + width, y + height - cut);
+  ctx.lineTo(x + width - cut, y + height);
+  ctx.lineTo(x, y + height);
+  ctx.lineTo(x, y + cut);
+  ctx.closePath();
 }
 
-function cutCornerPath(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, cut = 24) {
-  context.beginPath();
-  context.moveTo(x + cut, y);
-  context.lineTo(x + width, y);
-  context.lineTo(x + width, y + height - cut);
-  context.lineTo(x + width - cut, y + height);
-  context.lineTo(x, y + height);
-  context.lineTo(x, y + cut);
-  context.closePath();
-}
-
-function drawFrameDoodles(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  accent: string,
-) {
-  const unit = width / 420;
-  context.save();
-  context.lineJoin = "bevel";
-  context.lineCap = "square";
-  context.strokeStyle = COLORS.ink;
-  context.lineWidth = 5 * unit;
-
-  // Festival rails make the frame feel assembled, not outlined.
-  context.fillStyle = accent;
-  context.fillRect(x - 5 * unit, y + height * .26, 13 * unit, height * .31);
-  context.fillStyle = COLORS.yellow;
-  context.fillRect(x + width - 8 * unit, y + height * .18, 13 * unit, height * .22);
-  for (let index = 0; index < 7; index += 1) {
-    context.fillStyle = index % 3 === 0 ? COLORS.pink : index % 3 === 1 ? COLORS.yellow : COLORS.water;
-    context.save();
-    context.translate(x + width * .18 + index * width * .085, y - 7 * unit);
-    context.rotate(index % 2 ? .12 : -.12);
-    context.fillRect(0, 0, 24 * unit, 16 * unit);
-    context.restore();
-  }
-
-  // Isometric build cube, half on the frame and half on the portrait.
-  const cubeX = x + width * .77;
-  const cubeY = y + height * .08;
-  const cube = 32 * unit;
-  context.fillStyle = COLORS.yellow;
-  context.beginPath(); context.moveTo(cubeX, cubeY); context.lineTo(cubeX + cube, cubeY - cube * .5); context.lineTo(cubeX + cube * 2, cubeY); context.lineTo(cubeX + cube, cubeY + cube * .55); context.closePath(); context.fill(); context.stroke();
-  context.fillStyle = accent;
-  context.beginPath(); context.moveTo(cubeX, cubeY); context.lineTo(cubeX + cube, cubeY + cube * .55); context.lineTo(cubeX + cube, cubeY + cube * 1.6); context.lineTo(cubeX, cubeY + cube); context.closePath(); context.fill(); context.stroke();
-  context.fillStyle = COLORS.water;
-  context.beginPath(); context.moveTo(cubeX + cube, cubeY + cube * .55); context.lineTo(cubeX + cube * 2, cubeY); context.lineTo(cubeX + cube * 2, cubeY + cube); context.lineTo(cubeX + cube, cubeY + cube * 1.6); context.closePath(); context.fill(); context.stroke();
-
-  // Tiny beach bot.
-  const botX = x + width * .08;
-  const botY = y + height * .13;
-  context.fillStyle = COLORS.yellow;
-  context.fillRect(botX, botY, 52 * unit, 42 * unit);
-  context.strokeRect(botX, botY, 52 * unit, 42 * unit);
-  context.fillStyle = COLORS.ink;
-  context.fillRect(botX + 12 * unit, botY + 13 * unit, 7 * unit, 7 * unit);
-  context.fillRect(botX + 34 * unit, botY + 13 * unit, 7 * unit, 7 * unit);
-  context.beginPath();
-  context.moveTo(botX + 10 * unit, botY + 42 * unit); context.lineTo(botX - 2 * unit, botY + 61 * unit);
-  context.moveTo(botX + 42 * unit, botY + 42 * unit); context.lineTo(botX + 55 * unit, botY + 61 * unit);
-  context.moveTo(botX, botY + 22 * unit); context.lineTo(botX - 16 * unit, botY + 12 * unit);
-  context.moveTo(botX + 52 * unit, botY + 22 * unit); context.lineTo(botX + 68 * unit, botY + 8 * unit);
-  context.stroke();
-
-  // Palm scratch, wave ticks and lightning bolt.
-  context.strokeStyle = COLORS.yellow;
-  context.lineWidth = 7 * unit;
-  const palmX = x + width * .12;
-  const palmY = y + height * .66;
-  context.beginPath(); context.moveTo(palmX, palmY + 70 * unit); context.lineTo(palmX - 7 * unit, palmY + 18 * unit); context.stroke();
-  [[-7,18,-37,-5],[-7,18,-20,-22],[-7,18,11,-20],[-7,18,35,-3]].forEach(([x1,y1,x2,y2]) => {
-    context.beginPath(); context.moveTo(palmX + x1 * unit, palmY + y1 * unit); context.lineTo(palmX + x2 * unit, palmY + y2 * unit); context.stroke();
-  });
-  context.fillStyle = accent;
-  const boltX = x + width * .85;
-  const boltY = y + height * .54;
-  context.beginPath(); context.moveTo(boltX, boltY); context.lineTo(boltX - 26 * unit, boltY + 36 * unit); context.lineTo(boltX - 8 * unit, boltY + 36 * unit); context.lineTo(boltX - 34 * unit, boltY + 76 * unit); context.lineTo(boltX + 22 * unit, boltY + 27 * unit); context.lineTo(boltX + 2 * unit, boltY + 27 * unit); context.closePath(); context.fill();
-  context.strokeStyle = COLORS.ink;
-  context.lineWidth = 3 * unit;
-  for (let index = 0; index < 4; index += 1) {
-    context.beginPath();
-    context.moveTo(x + width * .62 + index * 18 * unit, y + height * .9 + (index % 2) * 6 * unit);
-    context.lineTo(x + width * .62 + index * 18 * unit + 11 * unit, y + height * .9 + (index % 2) * 6 * unit);
-    context.stroke();
-  }
-  context.fillStyle = COLORS.ink;
-  context.font = `900 ${13 * unit}px monospace`;
-  context.save();
-  context.translate(x + width - 13 * unit, y + height * .72);
-  context.rotate(Math.PI / 2);
-  context.fillText("BUILD · BEND · SHIP", 0, 0);
-  context.restore();
-  context.restore();
-}
-
-function fitText(context: CanvasRenderingContext2D, text: string, maxWidth: number, startSize: number, family: string) {
-  let size = startSize;
+function fitText(ctx: CanvasRenderingContext2D, text: string, max: number, size: number, family = "Arial Black") {
+  let current = size;
   do {
-    context.font = `400 ${size}px ${family}`;
-    if (context.measureText(text).width <= maxWidth) break;
-    size -= 2;
-  } while (size > 18);
+    ctx.font = `900 ${current}px ${family}`;
+    current -= 2;
+  } while (ctx.measureText(text).width > max && current > 18);
+}
+
+function drawCover(ctx: CanvasRenderingContext2D, image: HTMLImageElement, x: number, y: number, width: number, height: number) {
+  const scale = Math.max(width / image.width, height / image.height);
+  const sw = width / scale;
+  const sh = height / scale;
+  ctx.drawImage(image, (image.width - sw) / 2, (image.height - sh) / 2, sw, sh, x, y, width, height);
+}
+
+function drawDoodles(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  ctx.save();
+  ctx.strokeStyle = "#092f25";
+  ctx.lineWidth = Math.max(8, width / 135);
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  const u = width / 1080;
+  ctx.beginPath();
+  ctx.moveTo(62 * u, height - 92 * u); ctx.quadraticCurveTo(110 * u, height - 165 * u, 144 * u, height - 88 * u);
+  ctx.moveTo(103 * u, height - 125 * u); ctx.lineTo(76 * u, height - 188 * u); ctx.moveTo(108 * u, height - 136 * u); ctx.lineTo(143 * u, height - 192 * u);
+  ctx.stroke();
+  ctx.fillStyle = "#ff4f87"; ctx.fillRect(width - 192 * u, 55 * u, 116 * u, 116 * u);
+  ctx.strokeRect(width - 192 * u, 55 * u, 116 * u, 116 * u);
+  ctx.beginPath(); ctx.moveTo(width - 192 * u, 55 * u); ctx.lineTo(width - 134 * u, 18 * u); ctx.lineTo(width - 76 * u, 55 * u); ctx.stroke();
+  ctx.fillStyle = "#ffd900"; ctx.beginPath(); ctx.arc(width - 90 * u, height - 104 * u, 38 * u, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#092f25"; ctx.font = `900 ${28 * u}px Arial Black`; ctx.textAlign = "center"; ctx.fillText("HH", width - 90 * u, height - 94 * u);
+  ctx.restore();
 }
 
 export default function Home() {
-  const [builders, setBuilders] = useState<Builder[]>([starterBuilder(1)]);
-  const [activeId, setActiveId] = useState(1);
+  const [builder, setBuilder] = useState(INITIAL);
+  const [stage, setStage] = useState<Stage>(0);
   const [format, setFormat] = useState<Format>("id");
-  const [status, setStatus] = useState("Your build station is waiting.");
-  const [isDropping, setIsDropping] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const checkinRef = useRef<HTMLElement>(null);
-  const dragRef = useRef<{ x: number; y: number; startX: number; startY: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [status, setStatus] = useState("WAITING FOR YOUR PHOTO");
+  const [burst, setBurst] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const activeBuilder = builders.find((builder) => builder.id === activeId) ?? builders[0];
-  const completedBuilders = builders.filter((builder) => builder.photo);
-  const activeClass = useMemo(() => getBuilderClass(activeBuilder), [activeBuilder]);
+  const currentClass = useMemo(() => builderClass(builder), [builder]);
+  const currentId = useMemo(() => builderId(builder), [builder]);
+  const social = useMemo(() => socialDetails(builder.social), [builder.social]);
 
-  function updateBuilder(patch: Partial<Builder>, id = activeId) {
-    setBuilders((current) => current.map((builder) => (builder.id === id ? { ...builder, ...patch } : builder)));
-  }
+  const update = (patch: Partial<Builder>) => setBuilder((old) => ({ ...old, ...patch }));
 
-  function ingestFile(file?: File) {
-    if (!file) return;
-    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
-      setStatus("That file missed the beach. Try a JPG, PNG or HEIC photo.");
+  const ingestFile = useCallback(async (incoming?: File) => {
+    if (!incoming) return;
+    if (!incoming.type.startsWith("image/") && !/\.(heic|heif)$/i.test(incoming.name)) {
+      setStatus("THAT DOESN'T LOOK LIKE A PHOTO");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateBuilder({ photo: String(reader.result), fileName: file.name, zoom: 1, offsetX: 0, offsetY: 0 });
-      setStatus("Photo developed. Move it, answer the beach check-in, then ship it.");
-    };
-    reader.onerror = () => setStatus("That photo would not develop. Try another image.");
-    reader.readAsDataURL(file);
-  }
-
-  function onFileChange(event: ChangeEvent<HTMLInputElement>) {
-    ingestFile(event.target.files?.[0]);
-    event.target.value = "";
-  }
-
-  function onDrop(event: DragEvent<HTMLElement>) {
-    event.preventDefault();
-    setIsDropping(false);
-    ingestFile(event.dataTransfer.files?.[0]);
-  }
-
-  function addTeammate() {
-    if (builders.length >= 3) {
-      setStatus("The beach table fits three builders. That is the whole crew.");
-      return;
-    }
-    const nextId = Math.max(...builders.map((builder) => builder.id)) + 1;
-    setBuilders((current) => [...current, starterBuilder(nextId)]);
-    setActiveId(nextId);
-    setFormat("team");
-    setStatus("A chair is open. Add your teammate’s photo.");
-    requestAnimationFrame(() => fileInputRef.current?.click());
-  }
-
-  function removeTeammate(id: number) {
-    if (builders.length === 1) return;
-    const remaining = builders.filter((builder) => builder.id !== id);
-    setBuilders(remaining);
-    if (id === activeId) setActiveId(remaining[0].id);
-    setStatus("That chair is free again.");
-  }
-
-  function onCropPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!activeBuilder.photo) return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = { x: event.clientX, y: event.clientY, startX: activeBuilder.offsetX, startY: activeBuilder.offsetY };
-  }
-
-  function onCropPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!dragRef.current) return;
-    updateBuilder({
-      offsetX: Math.max(-50, Math.min(50, dragRef.current.startX + (event.clientX - dragRef.current.x) / 3)),
-      offsetY: Math.max(-50, Math.min(50, dragRef.current.startY + (event.clientY - dragRef.current.y) / 3)),
-    });
-  }
-
-  function onCropPointerUp() {
-    dragRef.current = null;
-  }
-
-  async function renderCanvas() {
-    const people = (format === "team" ? completedBuilders : [activeBuilder]).filter((builder) => builder.photo);
-    if (!people.length) throw new Error("Drop a photo before you ship this signal.");
-    await document.fonts.ready;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = format === "team" ? 1600 : 1080;
-    canvas.height = format === "id" ? 1350 : format === "pfp" ? 1080 : 1000;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("This browser could not open the print room.");
-    const { width, height } = canvas;
-
-    context.fillStyle = COLORS.green;
-    context.fillRect(0, 0, width, height);
-    context.fillStyle = COLORS.yellow;
-    context.save();
-    context.translate(width * 0.82, height * 0.09);
-    context.rotate(Math.PI / 5);
-    context.fillRect(-height * 0.13, -height * 0.13, height * 0.26, height * 0.26);
-    context.restore();
-
-    context.fillStyle = COLORS.paper;
-    context.font = `400 ${Math.round(width * 0.052)}px "Bowlby One SC"`;
-    context.fillText(format === "team" ? "CREW SIGNAL" : "BUILDER SIGNAL", width * 0.05, height * 0.095);
-    context.fillStyle = COLORS.yellow;
-    context.font = `700 ${Math.round(width * 0.022)}px monospace`;
-    context.fillText("HH GOA · 28—31 OCT 2026", width * 0.052, height * 0.135);
-
-    const gap = 28;
-    const cardWidth = format === "team" ? (width - 112 - gap * (people.length - 1)) / people.length : width * 0.76;
-    const cardHeight = format === "team" ? height * 0.63 : format === "pfp" ? height * 0.72 : height * 0.69;
-    const startX = format === "team" ? 56 : (width - cardWidth) / 2;
-    const cardY = height * 0.18;
-
-    for (let index = 0; index < people.length; index += 1) {
-      const builder = people[index];
-      const x = startX + index * (cardWidth + gap);
-      const accent = getAccent(builder.energy);
-      context.fillStyle = COLORS.paper;
-      context.strokeStyle = COLORS.ink;
-      context.lineWidth = 9;
-      cutCornerPath(context, x, cardY, cardWidth, cardHeight, 28);
-      context.fill();
-      context.stroke();
-
-      const pad = cardWidth * 0.055;
-      const photoHeight = cardHeight * 0.56;
-      const image = await loadImage(builder.photo);
-      context.save();
-      context.beginPath();
-      context.rect(x + pad, cardY + pad, cardWidth - pad * 2, photoHeight);
-      context.clip();
-      drawCover(context, image, x + pad, cardY + pad, cardWidth - pad * 2, photoHeight, builder.zoom, builder.offsetX, builder.offsetY);
-      context.restore();
-
-      drawFrameDoodles(context, x, cardY, cardWidth, cardHeight, accent);
-
-      context.fillStyle = accent;
-      context.fillRect(x + pad, cardY + pad + photoHeight - 18, cardWidth - pad * 2, 30);
-      context.fillStyle = COLORS.ink;
-      const name = (builder.name || `BUILDER ${index + 1}`).toUpperCase().slice(0, 18);
-      fitText(context, name, cardWidth - pad * 2, cardWidth * 0.095, '"Bowlby One SC"');
-      context.fillText(name, x + pad, cardY + pad + photoHeight + cardHeight * 0.13);
-      context.fillStyle = COLORS.pink;
-      context.font = `400 ${Math.max(24, Math.round(cardWidth * 0.055))}px Modak`;
-      context.fillText(getBuilderClass(builder), x + pad, cardY + pad + photoHeight + cardHeight * 0.205);
-      context.fillStyle = COLORS.ink;
-      context.font = `700 ${Math.max(15, Math.round(cardWidth * 0.031))}px monospace`;
-      context.fillText((builder.stack || "MAKING SOMETHING THAT MATTERS").toUpperCase().slice(0, 34), x + pad, cardY + pad + photoHeight + cardHeight * 0.26);
-      context.fillText(`${builder.energy.toUpperCase()} · ${builder.ritual.toUpperCase()}`.slice(0, 46), x + pad, cardY + cardHeight - cardHeight * 0.09);
-    }
-
-    context.fillStyle = COLORS.pink;
-    context.fillRect(0, height * 0.9, width, height * 0.1);
-    context.fillStyle = COLORS.paper;
-    context.font = `700 ${Math.round(width * 0.022)}px monospace`;
-    context.fillText("LESS NOISE. MORE SIGNAL. · #FRAMEINGOA", width * 0.05, height * 0.958);
-    return canvas;
-  }
-
-  async function downloadSignal() {
+    setStatus("DEVELOPING YOUR SIGNAL…");
     try {
-      setStatus("The print room is developing your signal…");
-      const canvas = await renderCanvas();
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-      if (!blob) throw new Error("The print room jammed. Try once more.");
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `hh-goa-${format}-signal.png`;
-      anchor.click();
-      URL.revokeObjectURL(url);
-      setStatus("Signal shipped. See you on the sand.");
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "This signal did not export.");
+      let file = incoming;
+      if (/heic|heif/i.test(incoming.type) || /\.(heic|heif)$/i.test(incoming.name)) {
+        const { default: heic2any } = await import("heic2any");
+        const converted = await heic2any({ blob: incoming, toType: "image/jpeg", quality: 0.92 });
+        const blob = Array.isArray(converted) ? converted[0] : converted;
+        file = new File([blob], incoming.name.replace(/\.(heic|heif)$/i, ".jpg"), { type: "image/jpeg" });
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        update({ photo: String(reader.result), fileName: file.name });
+        setStatus("PHOTO LOCKED. YOU'RE ON THE MAP.");
+        setBurst((n) => n + 1);
+        window.setTimeout(() => setStage(1), 450);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setStatus("WE COULDN'T READ THAT ONE. TRY JPG OR PNG.");
     }
-  }
+  }, []);
 
-  function shareToX() {
-    if (!completedBuilders.length) {
-      setStatus("Drop a photo before you send a signal.");
+  const onDrop = (event: DragEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    void ingestFile(event.dataTransfer.files?.[0]);
+  };
+
+  const onFile = (event: ChangeEvent<HTMLInputElement>) => void ingestFile(event.target.files?.[0]);
+
+  const goNext = () => {
+    if (stage === 1 && builder.name.trim().length < 2) return setStatus("GIVE US AT LEAST TWO LETTERS");
+    if (stage === 1 && builder.social.trim().length < 2) return setStatus("DROP ONE HANDLE OR LINK");
+    if (stage === 2 && !builder.stack) return setStatus("PICK YOUR PLAYGROUND");
+    setStatus(stage === 3 ? "SIGNAL FOUND. WELCOME TO THE SAND." : "SIGNAL UPDATED");
+    setBurst((n) => n + 1);
+    setIsFlipped(stage === 1);
+    setStage((Math.min(stage + 1, 4) as Stage));
+  };
+
+  const renderCanvas = useCallback(async (kind: Format = format) => {
+    const square = kind === "pfp";
+    const canvas = document.createElement("canvas");
+    canvas.width = square ? 1080 : 1400;
+    canvas.height = square ? 1080 : 900;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas unavailable");
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.fillStyle = "#f5efd9"; ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#0b6b42"; ctx.fillRect(0, 0, width, height * 0.56);
+    ctx.fillStyle = "#79d7cd"; ctx.fillRect(0, height * 0.56, width, height * 0.19);
+    ctx.fillStyle = "#f6bd54"; ctx.fillRect(0, height * 0.75, width, height * 0.25);
+    ctx.strokeStyle = "rgba(9,47,37,.18)"; ctx.lineWidth = 2;
+    for (let y = 18; y < height; y += 22) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y + 12); ctx.stroke(); }
+    drawDoodles(ctx, width, height);
+
+    if (kind === "back") {
+      const pad = 92;
+      ctx.fillStyle = "#ff4f87"; cutPath(ctx, pad, pad, width - pad * 2, height - pad * 2, 54); ctx.fill();
+      ctx.strokeStyle = "#092f25"; ctx.lineWidth = 16; ctx.stroke();
+      ctx.fillStyle = "#ffd900"; ctx.fillRect(pad, pad, width - pad * 2, 100);
+      ctx.fillStyle = "#092f25"; ctx.font = "900 34px Arial Black"; ctx.textAlign = "left"; ctx.fillText("FIND ME ON THE SAND", pad + 42, pad + 67);
+      ctx.fillStyle = "#fff9e8"; ctx.font = "900 28px Arial Black"; ctx.fillText(social.label, pad + 54, 320);
+      fitText(ctx, social.value.toUpperCase(), 720, 76); ctx.fillText(social.value.toUpperCase(), pad + 54, 400);
+      ctx.font = "700 25px monospace"; ctx.fillText(builder.crew, pad + 54, 500);
+      ctx.fillText(`${builder.stack}  /  ${builder.mode}`, pad + 54, 550);
+      const qr = await loadImage(await QRCode.toDataURL(social.url, { margin: 1, width: 360, color: { dark: "#092f25", light: "#fff9e8" } }));
+      ctx.fillStyle = "#fff9e8"; ctx.fillRect(width - 460, 270, 300, 300); ctx.drawImage(qr, width - 445, 285, 270, 270);
+      ctx.fillStyle = "#092f25"; ctx.fillRect(pad + 42, height - 185, width - pad * 2 - 84, 82);
+      ctx.fillStyle = "#ffd900"; ctx.font = "900 31px Arial Black"; ctx.fillText(`${currentId}  ·  #FRAMEINGOA`, pad + 72, height - 132);
+      return canvas;
+    }
+
+    if (kind === "pfp") {
+      ctx.fillStyle = "#ff4f87"; cutPath(ctx, 76, 76, 928, 928, 72); ctx.fill(); ctx.strokeStyle = "#092f25"; ctx.lineWidth = 18; ctx.stroke();
+      ctx.save(); cutPath(ctx, 145, 145, 790, 790, 50); ctx.clip();
+      if (builder.photo) drawCover(ctx, await loadImage(builder.photo), 145, 145, 790, 790);
+      else { ctx.fillStyle = "#ffd900"; ctx.fillRect(145, 145, 790, 790); ctx.fillStyle = "#092f25"; ctx.font = "900 160px Arial Black"; ctx.textAlign = "center"; ctx.fillText("YOU", 540, 600); }
+      ctx.restore();
+      ctx.fillStyle = "#ffd900"; ctx.fillRect(95, 800, 890, 136); ctx.strokeRect(95, 800, 890, 136);
+      ctx.fillStyle = "#092f25"; fitText(ctx, currentClass, 820, 68); ctx.textAlign = "center"; ctx.fillText(currentClass, 540, 886);
+      ctx.font = "900 26px Arial Black"; ctx.fillText("HH GOA '26 · SIGNAL ON THE SAND", 540, 985);
+      return canvas;
+    }
+
+    const isCrew = kind === "crew";
+    const pad = 70;
+    ctx.fillStyle = isCrew ? "#ff4f87" : "#fff9e8"; cutPath(ctx, pad, pad, width - pad * 2, height - pad * 2, 58); ctx.fill();
+    ctx.strokeStyle = "#092f25"; ctx.lineWidth = 16; ctx.stroke();
+    ctx.fillStyle = "#ffd900"; ctx.fillRect(pad, pad, width - pad * 2, 100);
+    ctx.fillStyle = "#092f25"; ctx.font = "900 32px Arial Black"; ctx.textAlign = "left"; ctx.fillText(isCrew ? "CREW SIGNAL · PASS THIS AROUND" : "HH GOA '26 · BUILDER SIGNAL", pad + 38, pad + 66);
+    ctx.save(); cutPath(ctx, pad + 48, pad + 150, 450, 510, 38); ctx.clip();
+    if (builder.photo) drawCover(ctx, await loadImage(builder.photo), pad + 48, pad + 150, 450, 510);
+    else { ctx.fillStyle = "#79d7cd"; ctx.fillRect(pad + 48, pad + 150, 450, 510); ctx.fillStyle = "#092f25"; ctx.font = "900 88px Arial Black"; ctx.textAlign = "center"; ctx.fillText("YOU", pad + 273, 450); }
+    ctx.restore();
+    const x = pad + 555;
+    ctx.fillStyle = "#092f25"; ctx.font = "900 25px Arial Black"; ctx.fillText("BUILDER CLASS", x, 260);
+    ctx.fillStyle = isCrew ? "#fff9e8" : "#0b6b42"; fitText(ctx, currentClass, 650, 82); ctx.fillText(currentClass, x, 345);
+    ctx.fillStyle = "#092f25"; ctx.font = "900 24px Arial Black"; ctx.fillText("KNOWN AS", x, 430);
+    fitText(ctx, builder.name.toUpperCase(), 650, 62); ctx.fillText(builder.name.toUpperCase(), x, 495);
+    ctx.font = "700 23px monospace"; ctx.fillText(`${builder.stack}  /  ${builder.mode}`, x, 565);
+    ctx.fillText(builder.crew, x, 612);
+    ctx.fillStyle = "#092f25"; ctx.fillRect(x, 655, 620, 78);
+    ctx.fillStyle = "#ffd900"; ctx.font = "900 28px Arial Black"; ctx.fillText(`${currentId}  ·  #FRAMEINGOA`, x + 26, 705);
+    ctx.fillStyle = "#092f25"; ctx.font = "900 24px Arial Black"; ctx.fillText("HACKER HOUSE GOA · 2026 · BUILT IN PUBLIC", pad + 48, height - 72);
+    return canvas;
+  }, [builder, currentClass, currentId, format, social]);
+
+  const download = async (kind: Format = format) => {
+    const canvas = await renderCanvas(kind);
+    const link = document.createElement("a");
+    link.download = `hh-goa-${kind}-${builder.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "builder"}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    setStatus(`${kind.toUpperCase()} SAVED TO CAMERA ROLL`);
+  };
+
+  const share = async () => {
+    const canvas = await renderCanvas(format);
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(), "image/png"));
+    const file = new File([blob], `hh-goa-${currentId}.png`, { type: "image/png" });
+    const params = new URLSearchParams({ n: builder.name, c: currentClass, s: builder.stack, m: builder.mode, r: builder.crew, u: social.value, id: currentId });
+    const shareUrl = `${window.location.origin}/signal?${params.toString()}`;
+    const copy = `I just found my HH Goa builder class: ${currentClass}. Find me on the sand. #FrameInGoa #HHGoa2026`;
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: "My HH Goa Builder Signal", text: copy, url: shareUrl });
+      setStatus("SIGNAL SENT INTO THE WORLD");
       return;
     }
-    const names = completedBuilders.map((builder) => builder.name || "a builder").join(", ");
-    const message = `Signal found 🌴 ${names} will be building from Goa at HH Goa 2026. ${activeClass} energy. Less noise. More signal. #FrameInGoa`;
-    window.open(`https://x.com/intent/post?text=${encodeURIComponent(message)}&url=${encodeURIComponent(window.location.href)}`, "_blank", "noopener,noreferrer");
-    setStatus("X is open. Add the PNG and let the signal travel.");
-  }
+    await download(format);
+    window.open(`https://x.com/intent/post?text=${encodeURIComponent(`${copy}\n${shareUrl}`)}`, "_blank", "noopener,noreferrer");
+    setStatus("IMAGE SAVED. ATTACH IT TO YOUR POST.");
+  };
 
-  const cropStyle = activeBuilder.photo ? {
-    backgroundImage: `url(${activeBuilder.photo})`,
-    backgroundPosition: `${50 + activeBuilder.offsetX}% ${50 + activeBuilder.offsetY}%`,
-    backgroundSize: activeBuilder.zoom === 1 ? "cover" : `${activeBuilder.zoom * 100}%`,
-  } : undefined;
+  const keyAdvance = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") goNext();
+  };
 
   return (
-    <main className="experience-shell">
-      <BeachScene
-        builderClass={activeClass}
-        energy={activeBuilder.energy}
-        mission={activeBuilder.mission}
-        name={activeBuilder.name}
-        offsetX={activeBuilder.offsetX}
-        offsetY={activeBuilder.offsetY}
-        photo={activeBuilder.photo}
-        ritual={activeBuilder.ritual}
-        stack={activeBuilder.stack}
-        zoom={activeBuilder.zoom}
-      />
-
+    <main className={`experience stage-${stage}`}>
+      <div className="grain" aria-hidden="true" />
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Signal on the Sand home">
-          <span>HH</span><b>GOA</b><small>’26</small>
+        <a className="wordmark" href="https://hhgoa.com" target="_blank" rel="noreferrer" aria-label="Hacker House Goa home">
+          <span>HH</span><b>GOA</b><small>2026</small>
         </a>
-        <div className="topbar__date">28—31 OCT · GOA, INDIA</div>
-        <a href="https://hhgoa.com/" target="_blank" rel="noreferrer">EVENT SITE ↗</a>
+        <div className="live-badge"><i /> LIVE FROM THE KONKAN COAST</div>
+        <button className="guide-button" onClick={() => setGuideOpen(true)}>FIELD GUIDE <span>↗</span></button>
       </header>
 
-      <section className="hero" id="top" aria-labelledby="page-title">
-        <div className="illustrated-world" aria-hidden="true">
-          <div className="sun-block">GOA</div>
-          <div className="cloud cloud--one"><span>WIFI?</span></div>
-          <div className="cloud cloud--two"><span>SHIP.</span></div>
-          <div className="horizon">
-            <i className="wave wave--one" />
-            <i className="wave wave--two" />
-            <i className="wave wave--three" />
-          </div>
-          <div className="shore" />
-          <PalmMark side="left" />
-          <PalmMark side="right" />
-          <div className="beach-hut"><i /><b>BUILD<br />HERE</b></div>
-          <div className="doodle doodle--spark">✦</div>
-          <div className="doodle doodle--code">&lt;/&gt;</div>
+      <section className="world" aria-label="Your live builder signal on a Goa beach">
+        <div className="sun" aria-hidden="true" />
+        <div className="cloud cloud-one" aria-hidden="true">☁</div>
+        <div className="cloud cloud-two" aria-hidden="true">☁</div>
+        <div className="world-copy">
+          <span className="eyebrow">YOUR FIRST 20 SECONDS AT HH GOA</span>
+          <h1>FIND YOUR<br /><em>SIGNAL.</em></h1>
+          <p>One photo. Four tiny decisions.<br />A builder signal made to find your people.</p>
         </div>
-        <div className="hero__copy">
-          <p className="kicker">TASK 01 · SEND A SIGNAL FROM THE SAND</p>
-          <h1 id="page-title">
-            <span className="hero__make">LESS NOISE.</span>
-            <span className="hero__signal"><i>MAKE YOUR</i><b>SIGNAL.</b></span>
-          </h1>
-          <div className="hero-note">
-            <strong>YOUR BEACH PASS, NOT A FORM.</strong>
-            <span>Drop a face, answer five mildly revealing questions, and let the beach decide what kind of builder just landed.</span>
-          </div>
-          <button className="enter-button" onClick={() => checkinRef.current?.scrollIntoView({ behavior: "smooth" })} type="button">
-            START THE CHECK-IN <span>↓</span>
-          </button>
-        </div>
-        <div className="scene-instruction" aria-hidden="true">
-          <span>THIS IS THE ID YOU’RE MAKING</span>
-          <span>MOVE TO TILT · CLICK TO FLIP</span>
-        </div>
+        <BeachScene
+          key={burst}
+          name={builder.name}
+          photo={builder.photo}
+          stack={builder.stack}
+          builderClass={currentClass}
+          socialLabel={social.label}
+          socialValue={social.value}
+          socialUrl={social.url}
+          buildMode={builder.mode}
+          crewStatus={builder.crew}
+          builderId={currentId}
+          flipped={isFlipped}
+          onFlip={setIsFlipped}
+        />
+        <button className="flip-hint" onClick={() => setIsFlipped(!isFlipped)}>
+          <span>{isFlipped ? "SEE THE FACE" : "FLIP FOR THE SIGNAL"}</span><b>↻</b>
+        </button>
+        <div className="shoreline" aria-hidden="true"><span /><span /><span /></div>
+        <div className="wayfinding" aria-hidden="true"><b>← CANDOLIM</b><b>BUILD ZONE →</b></div>
       </section>
 
-      <section
-        className={`checkin ${isDropping ? "is-dropping" : ""}`}
-        id="build-station"
-        ref={checkinRef}
-        onDragEnter={(event) => { event.preventDefault(); setIsDropping(true); }}
-        onDragLeave={() => setIsDropping(false)}
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={onDrop}
-      >
-        <div className="checkin-panel">
-          <div className="panel-heading">
-            <div><small>BEACH CHECK-IN · TAKES ABOUT A MINUTE</small><h2>WHO JUST LANDED?</h2></div>
-            <b>{String(activeId).padStart(2, "0")}/{String(builders.length).padStart(2, "0")}</b>
-          </div>
+      <section className="dock" aria-label="Build your HH Goa signal">
+        <div className="progress" aria-label={`Step ${Math.min(stage + 1, 4)} of 4`}>
+          {[0, 1, 2, 3].map((item) => <button key={item} className={stage === item ? "active" : stage > item ? "done" : ""} onClick={() => stage === 4 || item <= stage ? setStage(item as Stage) : undefined}><span>{stage > item ? "✓" : item + 1}</span><b>{["FACE", "SIGNAL", "PLAYGROUND", "CREW"][item]}</b></button>)}
+        </div>
 
-          <div className="journey-strip" aria-label="Three-step builder ID process">
-            <span><b>01</b><i>DROP A FACE</i><small>Processed only here</small></span>
-            <span><b>02</b><i>CONFESS A LITTLE</i><small>Five playful prompts</small></span>
-            <span><b>03</b><i>CLAIM THE SIGNAL</i><small>Download or share</small></span>
-          </div>
-
-          <div className="builder-tabs" aria-label="Crew members">
-            {builders.map((builder, index) => (
-              <button className={builder.id === activeId ? "is-active" : ""} key={builder.id} onClick={() => setActiveId(builder.id)} type="button">
-                <span>{index + 1}</span>{builder.name || `Mystery builder ${index + 1}`}
+        <div className="panel-wrap" aria-live="polite">
+          {stage === 0 && (
+            <article className="step-panel photo-step">
+              <div className="step-number">01</div>
+              <div className="step-copy"><span>ARRIVAL CHECK</span><h2>SHOW US<br />YOUR FACE.</h2><p>No polish needed. Beach hair encouraged.</p></div>
+              <button className={`drop-zone ${dragging ? "dragging" : ""}`} onClick={() => inputRef.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop}>
+                <span className="camera-glyph">✺</span><b>{builder.photo ? "SWAP THE PHOTO" : "DROP / TAP TO UPLOAD"}</b><small>JPG · PNG · HEIC</small>
               </button>
-            ))}
-            {builders.length < 3 && <button className="add-builder" onClick={addTeammate} type="button">+ PULL UP A CHAIR</button>}
-          </div>
-
-          {!activeBuilder.photo ? (
-            <button className="photo-drop" onClick={() => fileInputRef.current?.click()} type="button">
-              <span className="photo-drop__plus">+</span>
-              <span><strong>DROP YOUR BEST “I SHIPPED IT” FACE</strong><small>JPG, PNG or HEIC · stays on your device</small></span>
-            </button>
-          ) : (
-            <div className="crop-row">
-              <div
-                className="crop-window"
-                onPointerDown={onCropPointerDown}
-                onPointerMove={onCropPointerMove}
-                onPointerUp={onCropPointerUp}
-                onPointerCancel={onCropPointerUp}
-                style={cropStyle}
-                role="img"
-                aria-label="Drag to reposition your photo"
-              ><span>DRAG ME</span></div>
-              <div className="crop-controls">
-                <button onClick={() => fileInputRef.current?.click()} type="button">SWAP THE FACE ↻</button>
-                <label><span>COME CLOSER</span><input aria-label="Photo zoom" max="2" min="1" onChange={(event) => updateBuilder({ zoom: Number(event.target.value) })} step="0.01" type="range" value={activeBuilder.zoom} /></label>
-              </div>
-            </div>
+              <input ref={inputRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif" onChange={onFile} />
+            </article>
           )}
 
-          <div className="question-grid">
-            <label className="question question--name">
-              <span>WHAT SHOULD THE BEACH SHOUT WHEN YOU ARRIVE?</span>
-              <input maxLength={18} onChange={(event) => updateBuilder({ name: event.target.value })} placeholder="Name / alias" value={activeBuilder.name} />
-            </label>
-            <label className="question question--stack">
-              <span>WHAT’S ACTUALLY IN YOUR BUILD BAG?</span>
-              <input maxLength={34} onChange={(event) => updateBuilder({ stack: event.target.value })} placeholder="Agents, pixels, duct tape, Rust…" value={activeBuilder.stack} />
-            </label>
-            <label className="question question--mission">
-              <span>48 HOURS. ZERO ADULT SUPERVISION. WHAT DO YOU MAKE?</span>
-              <textarea maxLength={52} onChange={(event) => updateBuilder({ mission: event.target.value })} placeholder="Describe your beautiful trouble in one line" rows={2} value={activeBuilder.mission} />
-              <small>{activeBuilder.mission.length}/52</small>
-            </label>
-          </div>
+          {stage === 1 && (
+            <article className="step-panel identity-step">
+              <div className="step-number">02</div>
+              <div className="step-copy"><span>FREQUENCY</span><h2>WHAT DO WE<br />CALL YOU?</h2><p>And one place your future crew can find you.</p></div>
+              <div className="fields">
+                <label><span>YOUR NAME</span><input value={builder.name === "YOUR NAME" ? "" : builder.name} placeholder="e.g. Maya" onChange={(e) => update({ name: e.target.value })} /></label>
+                <label><span>ONE HANDLE OR LINK</span><input value={builder.social === "@yourhandle" ? "" : builder.social} placeholder="@handle or your.site" onChange={(e) => update({ social: e.target.value })} onKeyDown={keyAdvance} /></label>
+              </div>
+              <button className="next-button" onClick={goNext}>LOCK THE SIGNAL <b>→</b></button>
+            </article>
+          )}
 
-          <fieldset className="choice-question">
-            <legend>THE WIFI DIES. WHO DO YOU BECOME?</legend>
-            <div>{ENERGIES.map((energy) => <button className={activeBuilder.energy === energy ? "is-active" : ""} key={energy} onClick={() => updateBuilder({ energy })} type="button">{energy}</button>)}</div>
-          </fieldset>
+          {stage === 2 && (
+            <article className="step-panel stack-step">
+              <div className="step-number">03</div>
+              <div className="step-copy"><span>PLAYGROUND</span><h2>WHERE DO YOU<br />CAUSE TROUBLE?</h2><p>Don’t overthink it. First instinct wins.</p></div>
+              <div className="choice-area">
+                <div className="chip-grid">{STACKS.map((item) => <button key={item} className={builder.stack === item ? "selected" : ""} onClick={() => { update({ stack: item }); setBurst((n) => n + 1); }}>{item}</button>)}</div>
+                <span className="mini-label">YOUR BUILD MODE</span>
+                <div className="mode-grid">{MODES.map(([title, sub]) => <button key={title} className={builder.mode === title ? "selected" : ""} onClick={() => update({ mode: title })}><b>{title}</b><small>{sub}</small></button>)}</div>
+              </div>
+              <button className="next-button" onClick={goNext}>STAMP IT <b>→</b></button>
+            </article>
+          )}
 
-          <fieldset className="choice-question">
-            <legend>IT’S 3:07 AM. WHERE DO WE FIND YOU?</legend>
-            <div>{RITUALS.map((ritual) => <button className={activeBuilder.ritual === ritual ? "is-active" : ""} key={ritual} onClick={() => updateBuilder({ ritual })} type="button">{ritual}</button>)}</div>
-          </fieldset>
+          {stage === 3 && (
+            <article className="step-panel crew-step">
+              <div className="step-number">04</div>
+              <div className="step-copy"><span>THE HUMAN LAYER</span><h2>HOW ARE YOU<br />HITTING THE SAND?</h2><p>This becomes the easiest conversation starter in Goa.</p></div>
+              <div className="crew-grid">{CREWS.map((item, index) => <button key={item} className={builder.crew === item ? "selected" : ""} onClick={() => update({ crew: item })}><span>{["☀", "✦", "⌁", "?!"][index]}</span><b>{item}</b></button>)}</div>
+              <button className="next-button reveal-button" onClick={goNext}>REVEAL MY BUILDER CLASS <b>✺</b></button>
+            </article>
+          )}
 
-          <div className="class-reveal">
-            <div><small>THE BEACH HAS DECIDED</small><strong>{activeClass}</strong></div>
-            <button onClick={() => updateBuilder({ classSeed: activeBuilder.classSeed + 1 })} type="button">NOPE, AGAIN ↻</button>
-          </div>
-
-          <div className="output-row">
-            <div className="format-switcher" aria-label="Signal format">
-              {(["id", "pfp", "team"] as Format[]).map((item) => (
-                <button className={format === item ? "is-active" : ""} key={item} onClick={() => setFormat(item)} type="button">
-                  {item === "id" ? "BUILDER ID" : item === "pfp" ? "PFP" : "CREW FRAME"}
-                </button>
-              ))}
-            </div>
-            <div className="action-row">
-              <button className="download" onClick={downloadSignal} type="button">DOWNLOAD THE SIGNAL ↓</button>
-              <button className="share" onClick={shareToX} type="button">SEND IT TO X ↗</button>
-            </div>
-          </div>
-
-          {builders.length > 1 && <button className="remove-builder" onClick={() => removeTeammate(activeId)} type="button">REMOVE THIS BUILDER</button>}
-          <p className="status" role="status" aria-live="polite">{status}</p>
+          {stage === 4 && (
+            <article className="step-panel result-step">
+              <div className="result-title"><span>SIGNAL FOUND · {currentId}</span><h2>YOU’RE A<br /><em>{currentClass}.</em></h2><p>{builder.crew}. Now make it easier for the right people to find you.</p></div>
+              <div className="export-station">
+                <span className="mini-label">PACK YOUR BEACH BAG</span>
+                <div className="format-grid">
+                  {(["id", "back", "pfp", "crew"] as Format[]).map((item) => <button key={item} className={format === item ? "selected" : ""} onClick={() => { setFormat(item); setIsFlipped(item === "back"); }}><span>{item === "id" ? "▣" : item === "back" ? "QR" : item === "pfp" ? "◉" : "✦"}</span><b>{item === "id" ? "FRONT ID" : item === "back" ? "CONTACT BACK" : item === "pfp" ? "PFP" : "CREW CALL"}</b></button>)}
+                </div>
+                <div className="result-actions"><button onClick={() => void download()} className="download-button">DOWNLOAD PNG <span>↓</span></button><button onClick={() => void share()} className="share-button">SHARE SIGNAL <span>↗</span></button></div>
+                <button className="restart" onClick={() => { setBuilder(INITIAL); setStage(0); setIsFlipped(false); setStatus("WAITING FOR YOUR PHOTO"); }}>MAKE ANOTHER →</button>
+              </div>
+            </article>
+          )}
         </div>
-        <aside className="checkin-aside" aria-hidden="true">
-          <span>THE BEST CREWS START WITH A STRANGE LITTLE INTRODUCTION.</span>
-          <b>ONE CARD.<br />YOUR PEOPLE.</b>
-        </aside>
+
+        <div className="status-line"><span>{status}</span><b>{stage < 4 ? `${stage + 1} / 4` : "READY TO TRANSMIT"}</b></div>
       </section>
 
-      <input accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" className="visually-hidden" onChange={onFileChange} ref={fileInputRef} type="file" />
-      <footer><span>LESS NOISE. MORE SIGNAL.</span><span>NOT AN OFFICIAL EVENT CREDENTIAL.</span><span>RIFF RAFF · EXPERIENCE DRIVEN DESIGN</span></footer>
+      <aside className={`field-guide ${guideOpen ? "open" : ""}`} aria-hidden={!guideOpen}>
+        <button className="guide-close" onClick={() => setGuideOpen(false)} aria-label="Close field guide">×</button>
+        <span className="eyebrow">THE FOUR-DAY FIELD GUIDE</span>
+        <h2>YOU’RE NOT COMING<br />TO A CONFERENCE.</h2>
+        <p className="guide-lede">You’re entering a temporary city of builders—designed to turn strangers into crews and unfinished ideas into proof.</p>
+        <div className="guide-days">{GUIDE.map(([day, title, copy]) => <article key={day}><span>DAY {day}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
+        <a href="https://hhgoa.com/radar" target="_blank" rel="noreferrer">SEE WHAT THE COAST IS BUILDING <b>↗</b></a>
+      </aside>
+      {guideOpen && <button className="guide-scrim" aria-label="Close field guide" onClick={() => setGuideOpen(false)} />}
     </main>
   );
 }
