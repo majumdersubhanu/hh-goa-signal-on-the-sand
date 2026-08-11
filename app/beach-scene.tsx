@@ -53,6 +53,14 @@ function canvasTexture(canvas: HTMLCanvasElement) {
   return texture;
 }
 
+function paintAzulejos(ctx: CanvasRenderingContext2D, y: number, width: number) {
+  for (let x = 0; x < width; x += 28) {
+    ctx.fillStyle = x / 28 % 2 ? "#fff8e6" : "#d8edf0"; ctx.fillRect(x, y, 28, 24);
+    ctx.strokeStyle = "#1d4e89"; ctx.lineWidth = 2; ctx.strokeRect(x, y, 28, 24);
+    ctx.beginPath(); ctx.moveTo(x + 14, y + 4); ctx.lineTo(x + 24, y + 12); ctx.lineTo(x + 14, y + 20); ctx.lineTo(x + 4, y + 12); ctx.closePath(); ctx.stroke();
+  }
+}
+
 function placeholderTextures() {
   const make = (background: string, headline: string) => {
     const canvas = document.createElement("canvas");
@@ -61,10 +69,11 @@ function placeholderTextures() {
     ctx.fillStyle = background; ctx.fillRect(0, 0, 900, 560);
     ctx.fillStyle = "#ffd900"; ctx.fillRect(0, 0, 900, 82);
     ctx.fillStyle = "#092f25"; ctx.font = "900 42px Arial Black"; ctx.fillText(headline, 38, 56);
+    paintAzulejos(ctx, 82, 900);
     ctx.strokeStyle = "#092f25"; ctx.lineWidth = 16; ctx.strokeRect(8, 8, 884, 544);
     return canvasTexture(canvas);
   };
-  return { front: make("#fff8e6", "HH GOA '26 / BUILDER SIGNAL"), back: make("#ff4f87", "FIND ME ON THE SAND") };
+  return { front: make("#fff8e6", "HH GOA '26 / CANDOLIM SIGNAL"), back: make("#ff4f87", "FIND ME BETWEEN THE PALMS") };
 }
 
 function useSignalTextures(props: Props) {
@@ -80,7 +89,8 @@ function useSignalTextures(props: Props) {
       if (!front) return;
       front.fillStyle = "#fff8e6"; front.fillRect(0, 0, 900, 560);
       front.fillStyle = "#ffd900"; front.fillRect(0, 0, 900, 82);
-      front.fillStyle = "#092f25"; front.font = "900 28px Arial Black"; front.fillText("HH GOA '26  /  BUILDER SIGNAL", 35, 53);
+      front.fillStyle = "#092f25"; front.font = "900 28px Arial Black"; front.fillText("HH GOA '26  /  CANDOLIM BUILDER SIGNAL", 35, 53);
+      paintAzulejos(front, 82, 900);
       front.fillStyle = "#ff4f87"; front.fillRect(32, 112, 330, 365);
       if (props.photo) {
         try { cover(front, await imageFrom(props.photo), 45, 125, 304, 339); } catch { /* keep the color block */ }
@@ -104,7 +114,8 @@ function useSignalTextures(props: Props) {
       if (!back) return;
       back.fillStyle = "#ff4f87"; back.fillRect(0, 0, 900, 560);
       back.fillStyle = "#ffd900"; back.fillRect(0, 0, 900, 82);
-      back.fillStyle = "#092f25"; back.font = "900 28px Arial Black"; back.fillText("FIND ME ON THE SAND", 35, 53);
+      back.fillStyle = "#092f25"; back.font = "900 28px Arial Black"; back.fillText("FIND ME BETWEEN THE PALMS", 35, 53);
+      paintAzulejos(back, 82, 900);
       back.fillStyle = "#fff8e6"; back.font = "900 18px Arial Black"; back.fillText(props.socialLabel, 45, 153);
       fit(back, props.socialValue.toUpperCase(), 520, 56); back.fillText(props.socialValue.toUpperCase(), 45, 218);
       back.font = "700 17px monospace"; back.fillText(props.crewStatus, 45, 282);
@@ -116,7 +127,7 @@ function useSignalTextures(props: Props) {
       } catch { /* contact copy remains useful without QR */ }
       back.fillStyle = "#092f25"; back.fillRect(45, 390, 810, 78);
       back.fillStyle = "#ffd900"; back.font = "900 26px Arial Black"; back.fillText(`${props.builderId}  ·  #FRAMEINGOA`, 75, 440);
-      back.fillStyle = "#fff8e6"; back.font = "900 17px Arial Black"; back.fillText("SCAN / SAY HI / BUILD SOMETHING STRANGE", 45, 515);
+      back.fillStyle = "#fff8e6"; back.font = "900 17px Arial Black"; back.fillText("CANDOLIM, GOA / SCAN / SAY HI / BUILD SOMETHING STRANGE", 45, 515);
       back.strokeStyle = "#092f25"; back.lineWidth = 15; back.strokeRect(7.5, 7.5, 885, 545);
 
       const next = { front: canvasTexture(frontCanvas), back: canvasTexture(backCanvas) };
@@ -137,6 +148,32 @@ function Palm({ position = [0, 0, 0], scale = 1 }: { position?: [number, number,
       </group>
     </group>
   );
+}
+
+function GoanHouse({ position }: { position: [number, number, number] }) {
+  return <group position={position} rotation={[0, 0.18, 0]}>
+    <mesh position={[0, .62, 0]} castShadow><boxGeometry args={[2.45, 1.5, 1.05]} /><meshStandardMaterial color="#fff8e6" roughness={.88} /></mesh>
+    <mesh position={[0, 1.63, 0]} rotation={[0, Math.PI / 4, 0]} castShadow><coneGeometry args={[1.78, .82, 4]} /><meshStandardMaterial color="#a84f2b" roughness={.95} flatShading /></mesh>
+    <mesh position={[-.65, .72, .535]}><planeGeometry args={[.4, .68]} /><meshStandardMaterial color="#1d4e89" /></mesh>
+    <mesh position={[.65, .72, .535]}><planeGeometry args={[.4, .68]} /><meshStandardMaterial color="#1d4e89" /></mesh>
+    <mesh position={[0, .46, .545]}><planeGeometry args={[.48, .92]} /><meshStandardMaterial color="#ffd900" /></mesh>
+    <mesh position={[0, -.18, .42]}><boxGeometry args={[2.8, .18, 1.05]} /><meshStandardMaterial color="#b96a3c" /></mesh>
+    {[-1.02, 1.02].map((x) => <mesh key={x} position={[x, .18, .78]}><cylinderGeometry args={[.055, .075, .92, 8]} /><meshStandardMaterial color="#1d4e89" /></mesh>)}
+    <group position={[1.15, 1.12, .56]}>{Array.from({ length: 8 }).map((_, i) => <mesh key={i} position={[(i % 3) * .17 - .18, Math.floor(i / 3) * .17 - .12, (i % 2) * .04]}><sphereGeometry args={[.16, 7, 6]} /><meshStandardMaterial color={i % 2 ? "#ff4f87" : "#e63476"} flatShading /></mesh>)}</group>
+    <mesh position={[-1.2, .57, .56]}><boxGeometry args={[.11, 1.4, .12]} /><meshStandardMaterial color="#ffd900" /></mesh>
+  </group>;
+}
+
+function FishingBoat({ position }: { position: [number, number, number] }) {
+  const boat = useRef<THREE.Group>(null);
+  useFrame(({ clock }) => { if (boat.current) boat.current.rotation.z = Math.sin(clock.elapsedTime * 1.4) * .045; });
+  return <group ref={boat} position={position} rotation={[0, -.35, 0]}>
+    <mesh rotation={[0, 0, Math.PI / 2]}><cylinderGeometry args={[.28, .5, 1.7, 4]} /><meshStandardMaterial color="#1d4e89" roughness={.76} flatShading /></mesh>
+    <mesh position={[0, .1, .24]} rotation={[0, 0, Math.PI / 2]}><boxGeometry args={[.13, 1.15, .14]} /><meshStandardMaterial color="#ffd900" /></mesh>
+    <mesh position={[0, .82, 0]}><cylinderGeometry args={[.025, .035, 1.65, 8]} /><meshStandardMaterial color="#6f3f2a" /></mesh>
+    <mesh position={[.35, .82, 0]} rotation={[0, 0, -.12]}><coneGeometry args={[.48, 1.05, 3]} /><meshStandardMaterial color="#ff4f87" side={THREE.DoubleSide} /></mesh>
+    <mesh position={[-.5, -.03, .42]}><sphereGeometry args={[.16, 8, 6]} /><meshStandardMaterial color="#fff8e6" /></mesh>
+  </group>;
 }
 
 function Laptop({ position }: { position: [number, number, number] }) {
@@ -190,6 +227,8 @@ function World({ props }: { props: Props }) {
     <spotLight position={[5, 4, 4]} intensity={8} angle={0.8} penumbra={1} color="#ffaf84" />
     <fog attach="fog" args={["#79d7cd", 8, 19]} />
     <Signal props={props} />
+    <GoanHouse position={[-3.25, -1.85, -3.2]} />
+    <FishingBoat position={[3.35, -1.45, -3.25]} />
     <Palm position={[-4.05, -1.7, -1.2]} scale={0.9} />
     <Palm position={[4.15, -1.9, -2]} scale={0.68} />
     <Robot position={[3.2, -1.35, 0.2]} />

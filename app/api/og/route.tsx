@@ -22,11 +22,11 @@ export async function GET(request: Request) {
       <div style={{ position: "absolute", inset: 0, opacity: .12, backgroundImage: "linear-gradient(#092f25 2px, transparent 2px), linear-gradient(90deg, #092f25 2px, transparent 2px)", backgroundSize: "28px 28px", display: "flex" }} />
       <div style={{ position: "absolute", left: 70, top: 48, display: "flex", alignItems: "center", gap: 16, color: "#fff8e6", fontWeight: 900, fontSize: 28 }}>
         <span style={{ background: "#ff4f87", color: "#092f25", border: "5px solid #092f25", padding: "8px 13px", display: "flex" }}>HH</span>
-        <span style={{ display: "flex" }}>GOA 2026 · SIGNAL ON THE SAND</span>
+        <span style={{ display: "flex" }}>GOA 2026 · CANDOLIM · SIGNAL ON THE SAND</span>
       </div>
       <div style={{ position: "absolute", left: 80, right: 80, top: 135, bottom: 55, background: "#fff8e6", border: "12px solid #092f25", boxShadow: "18px 18px 0 #092f25", display: "flex", flexDirection: "column" }}>
         <div style={{ height: 82, flexShrink: 0, background: "#ffd900", borderBottom: "8px solid #092f25", padding: "20px 30px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 25, fontWeight: 900 }}>
-          <span style={{ display: "flex" }}>HH GOA ’26 / BUILDER SIGNAL</span><span style={{ display: "flex" }}>{id}</span>
+          <span style={{ display: "flex" }}>HH GOA ’26 / CANDOLIM BUILDER SIGNAL</span><span style={{ display: "flex" }}>{id}</span>
         </div>
         <div style={{ flex: 1, display: "flex", padding: "33px 38px 28px", gap: 42 }}>
           <div style={{ width: 325, flexShrink: 0, background: "#ff4f87", border: "7px solid #092f25", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
@@ -43,6 +43,9 @@ export async function GET(request: Request) {
             <div style={{ marginTop: "auto", background: "#092f25", color: "#ffd900", padding: "13px 18px", fontSize: 19, fontWeight: 900, display: "flex", justifyContent: "space-between" }}><span style={{ display: "flex" }}>{social}</span><span style={{ display: "flex" }}>#FRAMEINGOA</span></div>
           </div>
         </div>
+      </div>
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 30, display: "flex", background: "#fff8e6", borderTop: "5px solid #092f25" }}>
+        {Array.from({ length: 30 }).map((_, index) => <span key={index} style={{ width: 40, height: 30, display: "flex", borderRight: "2px solid #1d4e89", background: index % 2 ? "#d8edf0" : "#fff8e6", alignItems: "center", justifyContent: "center" }}><span style={{ width: 9, height: 9, display: "flex", border: "2px solid #1d4e89", transform: "rotate(45deg)" }} /></span>)}
       </div>
     </div>,
     { width: 1200, height: 630, headers: { "Cache-Control": "public, max-age=31536000, immutable" } },

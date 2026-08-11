@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
   const title = "Signal on the Sand — HH Goa 2026";
-  const description = "Find your HH Goa 2026 Builder Signal in 20 seconds. Make a reversible 3D ID, contact card, PFP and crew call—then share your personal preview with #FrameInGoa.";
+  const description = "Touch down in Candolim and find your HH Goa 2026 Builder Signal in 20 seconds. Make a reversible 3D ID, contact card, PFP and crew call—then share it with #FrameInGoa.";
 
   return {
     title,
@@ -41,13 +41,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       type: "website",
       url: origin,
-      images: [{ url: `${origin}/og-final.png`, width: 1731, height: 909, alt: "Find Your Signal — HH Goa 2026" }],
+      images: [{ url: `${origin}/og-goa.png`, width: 1536, height: 1024, alt: "Find Your Signal in Candolim, Goa — HH Goa 2026" }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [`${origin}/og-final.png`],
+      images: [`${origin}/og-goa.png`],
     },
   };
 }

@@ -133,6 +133,23 @@ function drawDoodles(ctx: CanvasRenderingContext2D, width: number, height: numbe
   ctx.beginPath(); ctx.moveTo(width - 192 * u, 55 * u); ctx.lineTo(width - 134 * u, 18 * u); ctx.lineTo(width - 76 * u, 55 * u); ctx.stroke();
   ctx.fillStyle = "#ffd900"; ctx.beginPath(); ctx.arc(width - 90 * u, height - 104 * u, 38 * u, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   ctx.fillStyle = "#092f25"; ctx.font = `900 ${28 * u}px Arial Black`; ctx.textAlign = "center"; ctx.fillText("HH", width - 90 * u, height - 94 * u);
+  // A tiny Goan fishing boat and balcão arch keep the frame rooted in place,
+  // rather than reading as a generic tropical event graphic.
+  ctx.fillStyle = "#1d4e89"; ctx.beginPath(); ctx.moveTo(250 * u, height - 70 * u); ctx.lineTo(390 * u, height - 70 * u); ctx.lineTo(360 * u, height - 32 * u); ctx.lineTo(278 * u, height - 32 * u); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fff9e8"; ctx.fillRect(295 * u, height - 118 * u, 58 * u, 48 * u); ctx.strokeRect(295 * u, height - 118 * u, 58 * u, 48 * u);
+  ctx.fillStyle = "#a84f2b"; ctx.beginPath(); ctx.moveTo(282 * u, height - 118 * u); ctx.lineTo(324 * u, height - 150 * u); ctx.lineTo(366 * u, height - 118 * u); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = "#1d4e89"; ctx.lineWidth = 5 * u; ctx.beginPath(); ctx.arc(width - 305 * u, 128 * u, 58 * u, Math.PI, 0); ctx.lineTo(width - 247 * u, 205 * u); ctx.moveTo(width - 363 * u, 128 * u); ctx.lineTo(width - 363 * u, 205 * u); ctx.stroke();
+  ctx.restore();
+}
+
+function drawAzulejoBand(ctx: CanvasRenderingContext2D, y: number, width: number, tile = 46) {
+  ctx.save();
+  for (let x = 0; x < width; x += tile) {
+    ctx.fillStyle = x / tile % 2 ? "#fff9e8" : "#d8edf0"; ctx.fillRect(x, y, tile, tile);
+    ctx.strokeStyle = "#1d4e89"; ctx.lineWidth = 3; ctx.strokeRect(x, y, tile, tile);
+    ctx.beginPath(); ctx.moveTo(x + tile / 2, y + 6); ctx.lineTo(x + tile - 6, y + tile / 2); ctx.lineTo(x + tile / 2, y + tile - 6); ctx.lineTo(x + 6, y + tile / 2); ctx.closePath(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + tile / 2, y + tile / 2, tile * .14, 0, Math.PI * 2); ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -213,6 +230,7 @@ export default function Home() {
     ctx.fillStyle = "#0b6b42"; ctx.fillRect(0, 0, width, height * 0.56);
     ctx.fillStyle = "#79d7cd"; ctx.fillRect(0, height * 0.56, width, height * 0.19);
     ctx.fillStyle = "#f6bd54"; ctx.fillRect(0, height * 0.75, width, height * 0.25);
+    drawAzulejoBand(ctx, height * 0.75 - 22, width, 44);
     ctx.strokeStyle = "rgba(9,47,37,.18)"; ctx.lineWidth = 2;
     for (let y = 18; y < height; y += 22) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y + 12); ctx.stroke(); }
     drawDoodles(ctx, width, height);
@@ -222,7 +240,7 @@ export default function Home() {
       ctx.fillStyle = "#ff4f87"; cutPath(ctx, pad, pad, width - pad * 2, height - pad * 2, 54); ctx.fill();
       ctx.strokeStyle = "#092f25"; ctx.lineWidth = 16; ctx.stroke();
       ctx.fillStyle = "#ffd900"; ctx.fillRect(pad, pad, width - pad * 2, 100);
-      ctx.fillStyle = "#092f25"; ctx.font = "900 34px Arial Black"; ctx.textAlign = "left"; ctx.fillText("FIND ME ON THE SAND", pad + 42, pad + 67);
+      ctx.fillStyle = "#092f25"; ctx.font = "900 34px Arial Black"; ctx.textAlign = "left"; ctx.fillText("FIND ME BETWEEN THE PALMS", pad + 42, pad + 67);
       ctx.fillStyle = "#fff9e8"; ctx.font = "900 28px Arial Black"; ctx.fillText(social.label, pad + 54, 320);
       fitText(ctx, social.value.toUpperCase(), 720, 76); ctx.fillText(social.value.toUpperCase(), pad + 54, 400);
       ctx.font = "700 25px monospace"; ctx.fillText(builder.crew, pad + 54, 500);
@@ -231,6 +249,7 @@ export default function Home() {
       ctx.fillStyle = "#fff9e8"; ctx.fillRect(width - 460, 270, 300, 300); ctx.drawImage(qr, width - 445, 285, 270, 270);
       ctx.fillStyle = "#092f25"; ctx.fillRect(pad + 42, height - 185, width - pad * 2 - 84, 82);
       ctx.fillStyle = "#ffd900"; ctx.font = "900 31px Arial Black"; ctx.fillText(`${currentId}  ·  #FRAMEINGOA`, pad + 72, height - 132);
+      ctx.fillStyle = "#fff9e8"; ctx.font = "900 20px Arial Black"; ctx.fillText("CANDOLIM · GOA · 15.2993° N", pad + 72, height - 88);
       return canvas;
     }
 
@@ -242,7 +261,7 @@ export default function Home() {
       ctx.restore();
       ctx.fillStyle = "#ffd900"; ctx.fillRect(95, 800, 890, 136); ctx.strokeRect(95, 800, 890, 136);
       ctx.fillStyle = "#092f25"; fitText(ctx, currentClass, 820, 68); ctx.textAlign = "center"; ctx.fillText(currentClass, 540, 886);
-      ctx.font = "900 26px Arial Black"; ctx.fillText("HH GOA '26 · SIGNAL ON THE SAND", 540, 985);
+      ctx.font = "900 26px Arial Black"; ctx.fillText("HH GOA '26 · CANDOLIM, GOA", 540, 985);
       return canvas;
     }
 
@@ -251,7 +270,7 @@ export default function Home() {
     ctx.fillStyle = isCrew ? "#ff4f87" : "#fff9e8"; cutPath(ctx, pad, pad, width - pad * 2, height - pad * 2, 58); ctx.fill();
     ctx.strokeStyle = "#092f25"; ctx.lineWidth = 16; ctx.stroke();
     ctx.fillStyle = "#ffd900"; ctx.fillRect(pad, pad, width - pad * 2, 100);
-    ctx.fillStyle = "#092f25"; ctx.font = "900 32px Arial Black"; ctx.textAlign = "left"; ctx.fillText(isCrew ? "CREW SIGNAL · PASS THIS AROUND" : "HH GOA '26 · BUILDER SIGNAL", pad + 38, pad + 66);
+    ctx.fillStyle = "#092f25"; ctx.font = "900 32px Arial Black"; ctx.textAlign = "left"; ctx.fillText(isCrew ? "CREW SIGNAL · PASS THIS AROUND GOA" : "HH GOA '26 · CANDOLIM BUILDER SIGNAL", pad + 38, pad + 66);
     ctx.save(); cutPath(ctx, pad + 48, pad + 150, 450, 510, 38); ctx.clip();
     if (builder.photo) drawCover(ctx, await loadImage(builder.photo), pad + 48, pad + 150, 450, 510);
     else { ctx.fillStyle = "#79d7cd"; ctx.fillRect(pad + 48, pad + 150, 450, 510); ctx.fillStyle = "#092f25"; ctx.font = "900 88px Arial Black"; ctx.textAlign = "center"; ctx.fillText("YOU", pad + 273, 450); }
@@ -270,7 +289,7 @@ export default function Home() {
     const footerBaseline = cardBottom - 28;
     ctx.strokeStyle = "#092f25"; ctx.lineWidth = 3; ctx.setLineDash([12, 8]);
     ctx.beginPath(); ctx.moveTo(pad + 48, footerRuleY); ctx.lineTo(width - pad - 48, footerRuleY); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = "#092f25"; ctx.font = "900 22px Arial Black"; ctx.fillText("HACKER HOUSE GOA · 2026 · BUILT IN PUBLIC", pad + 48, footerBaseline);
+    ctx.fillStyle = "#092f25"; ctx.font = "900 22px Arial Black"; ctx.fillText("CANDOLIM, GOA · 15.2993° N · BUILT IN PUBLIC", pad + 48, footerBaseline);
     return canvas;
   }, [builder, currentClass, currentId, format, social]);
 
@@ -311,7 +330,7 @@ export default function Home() {
         <a className="wordmark" href="https://hhgoa.com" target="_blank" rel="noreferrer" aria-label="Hacker House Goa home">
           <span>HH</span><b>GOA</b><small>2026</small>
         </a>
-        <div className="live-badge"><i /> LIVE FROM THE KONKAN COAST</div>
+        <div className="live-badge"><i /> LIVE FROM CANDOLIM, GOA</div>
         <button className="guide-button" onClick={() => setGuideOpen(true)}>FIELD GUIDE <span>↗</span></button>
       </header>
 
@@ -320,10 +339,12 @@ export default function Home() {
         <div className="cloud cloud-one" aria-hidden="true">☁</div>
         <div className="cloud cloud-two" aria-hidden="true">☁</div>
         <div className="world-copy">
-          <span className="eyebrow">YOUR FIRST 20 SECONDS AT HH GOA</span>
+          <span className="eyebrow">TOUCHDOWN: CANDOLIM, GOA</span>
           <h1>FIND YOUR<br /><em>SIGNAL.</em></h1>
-          <p>One photo. Four tiny decisions.<br />A builder signal made to find your people.</p>
+          <p>From Mopa to the build floor.<br />One photo. Four tiny decisions. Your people.</p>
         </div>
+        <div className="goa-postmark" aria-hidden="true"><span>SUSEGAD<br />MODE</span><b>GOA<br />’26</b></div>
+        <div className="azulejo-rail" aria-hidden="true">{Array.from({ length: 9 }).map((_, index) => <i key={index} />)}</div>
         <BeachScene
           key={burst}
           name={builder.name}
@@ -343,7 +364,7 @@ export default function Home() {
           <span>{isFlipped ? "SEE THE FACE" : "FLIP FOR THE SIGNAL"}</span><b>↻</b>
         </button>
         <div className="shoreline" aria-hidden="true"><span /><span /><span /></div>
-        <div className="wayfinding" aria-hidden="true"><b>← CANDOLIM</b><b>BUILD ZONE →</b></div>
+        <div className="wayfinding" aria-hidden="true"><b>← MANDOVI</b><b>MOPA 34 KM ↑</b><b>BUILD ZONE →</b></div>
       </section>
 
       <section className="dock" aria-label="Build your HH Goa signal">
@@ -417,9 +438,9 @@ export default function Home() {
 
       <aside className={`field-guide ${guideOpen ? "open" : ""}`} aria-hidden={!guideOpen}>
         <button className="guide-close" onClick={() => setGuideOpen(false)} aria-label="Close field guide">×</button>
-        <span className="eyebrow">THE FOUR-DAY FIELD GUIDE</span>
+        <span className="eyebrow">THE CANDOLIM FIELD GUIDE</span>
         <h2>YOU’RE NOT COMING<br />TO A CONFERENCE.</h2>
-        <p className="guide-lede">You’re entering a temporary city of builders—designed to turn strangers into crews and unfinished ideas into proof.</p>
+        <p className="guide-lede">You’re entering a temporary builder village by the Arabian Sea—where strangers become crews and unfinished ideas leave Goa as proof.</p>
         <div className="guide-days">{GUIDE.map(([day, title, copy]) => <article key={day}><span>DAY {day}</span><h3>{title}</h3><p>{copy}</p></article>)}</div>
         <a href="https://hhgoa.com/radar" target="_blank" rel="noreferrer">SEE WHAT THE COAST IS BUILDING <b>↗</b></a>
       </aside>

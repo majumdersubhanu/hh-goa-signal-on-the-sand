@@ -9,6 +9,8 @@
   --pink: #ff4f87;
   --aqua: #79d7cd;
   --sand: #f6bd54;
+  --laterite: #a84f2b;
+  --azulejo: #1d4e89;
   --line: 3px solid var(--ink);
 }
 
@@ -47,6 +49,12 @@ button { color: inherit; }
 .world-copy p { margin: 20px 0 0; max-width: 365px; font-size: clamp(11px, 1vw, 15px); line-height: 1.55; font-weight: 700; text-transform: uppercase; background: var(--ink); padding: 9px 12px; box-decoration-break: clone; }
 .beach-canvas { position: absolute; z-index: 4; inset: -6% -4% -13% 29%; cursor: grab; touch-action: pan-y; }
 .beach-canvas:active { cursor: grabbing; }
+.goa-postmark { position: absolute; z-index: 5; top: 7%; left: 34%; width: 112px; aspect-ratio: 1; border: 3px double var(--cream); border-radius: 50%; color: var(--cream); display: grid; grid-template-columns: 1fr 1fr; place-items: center; padding: 13px; text-align: center; transform: rotate(-9deg); opacity: .82; mix-blend-mode: screen; }
+.goa-postmark::before, .goa-postmark::after { content: ""; position: absolute; left: -23px; right: -23px; height: 2px; background: var(--cream); box-shadow: 0 7px 0 var(--cream), 0 -7px 0 var(--cream); }
+.goa-postmark span { font-size: 7px; font-weight: 900; line-height: 1.3; }
+.goa-postmark b { font: 400 19px/.85 var(--font-display), sans-serif; color: var(--yellow); }
+.azulejo-rail { position: absolute; z-index: 7; top: 0; right: 0; bottom: 0; width: 38px; display: flex; flex-direction: column; overflow: hidden; border-left: 3px solid var(--ink); background: var(--cream); }
+.azulejo-rail i { flex: 0 0 38px; border-bottom: 2px solid var(--azulejo); background: conic-gradient(from 45deg at 50% 50%, var(--cream) 0 12.5%, var(--azulejo) 0 25%, var(--cream) 0 37.5%, #9bc9d2 0 50%, var(--cream) 0 62.5%, var(--azulejo) 0 75%, var(--cream) 0 87.5%, #9bc9d2 0); }
 .flip-hint { position: absolute; z-index: 8; right: 4.5%; bottom: 14%; display: flex; align-items: center; gap: 12px; background: var(--cream); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 7px 8px 7px 12px; font-size: 9px; font-weight: 900; cursor: pointer; transform: rotate(2deg); }
 .flip-hint b { display: grid; place-items: center; width: 24px; height: 24px; background: var(--pink); border: 1px solid var(--ink); font-size: 16px; transition: transform .3s; }
 .flip-hint:hover b { transform: rotate(180deg); }
@@ -54,6 +62,7 @@ button { color: inherit; }
 .shoreline span { display: block; height: 14px; border-top: 3px solid rgba(9,47,37,.5); margin-top: 8px; transform: skewX(-12deg); }
 .wayfinding { position: absolute; z-index: 6; left: 38%; bottom: 11%; display: flex; gap: 7px; transform: rotate(-2deg); }
 .wayfinding b { padding: 6px 9px; border: 2px solid var(--ink); background: var(--sand); font-size: 9px; }
+.wayfinding b:nth-child(2) { background: var(--azulejo); color: var(--cream); transform: rotate(-2deg); }
 .wayfinding b:last-child { background: var(--pink); transform: rotate(4deg); }
 
 .dock { position: relative; z-index: 10; display: grid; grid-template-rows: 62px 1fr 34px; min-height: 370px; background: var(--cream); }
@@ -64,6 +73,7 @@ button { color: inherit; }
 .progress button.done, .progress button.active { opacity: 1; cursor: pointer; }
 .progress button.active { background: var(--yellow); }
 .progress button.done { background: var(--aqua); }
+.progress button.active span { border-color: var(--azulejo); box-shadow: inset 0 0 0 3px var(--cream); background: var(--azulejo); color: var(--cream); }
 .progress button span { flex: 0 0 auto; display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; border: 2px solid var(--ink); font-size: 11px; font-weight: 900; background: var(--cream); }
 .progress button.done span { background: var(--green); color: var(--cream); }
 .progress button b { font-size: 10px; letter-spacing: .06em; }
@@ -131,6 +141,7 @@ button { color: inherit; }
 .guide-days { margin: 30px 0; border-top: var(--line); }
 .guide-days article { display: grid; grid-template-columns: 65px 135px 1fr; align-items: start; gap: 12px; padding: 20px 0; border-bottom: 2px solid var(--ink); }
 .guide-days article > span { font-size: 9px; font-weight: 900; background: var(--pink); padding: 5px; width: max-content; }
+.guide-days article:nth-child(even) > span { background: var(--laterite); color: var(--cream); }
 .guide-days h3 { margin: 0; font: 400 19px var(--font-display), sans-serif; }
 .guide-days p { margin: 0; font-size: 10px; line-height: 1.5; font-weight: 700; text-transform: uppercase; }
 .field-guide > a { display: flex; justify-content: space-between; color: var(--cream); background: var(--ink); padding: 17px; text-decoration: none; font: 400 13px var(--font-display), sans-serif; }
@@ -169,10 +180,14 @@ button { color: inherit; }
   .sun { width: 130px; top: 8%; right: 2%; }
   .cloud-one { top: 23%; left: 55%; }.cloud-two { display: none; }
   .beach-canvas { inset: 13% -29% -9% -24%; }
+  .goa-postmark { display: none; }
+  .azulejo-rail { width: 21px; }
+  .azulejo-rail i { flex-basis: 21px; }
   .flip-hint { right: 13px; bottom: 33px; padding: 5px 5px 5px 8px; font-size: 7px; }
   .flip-hint b { width: 20px; height: 20px; }
   .wayfinding { left: 14px; bottom: 25px; }
   .wayfinding b { font-size: 7px; padding: 4px 6px; }
+  .wayfinding b:nth-child(2) { display: none; }
   .dock { min-height: calc(100svh - 468px); display: grid; grid-template-rows: 51px auto 29px; }
   .progress { grid-template-columns: repeat(4, 1fr); position: sticky; top: 58px; z-index: 20; }
   .progress button { min-width: 0; justify-content: center; padding: 0; gap: 0; }
