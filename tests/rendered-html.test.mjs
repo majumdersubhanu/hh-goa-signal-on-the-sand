@@ -46,6 +46,7 @@ test("keeps photos local and ships the required output and sharing paths", async
   assert.match(page, /navigator\.canShare/);
   assert.match(page, /CONTACT BACK/);
   assert.match(page, /new URLSearchParams/);
+  assert.match(page, /const footerBaseline = cardBottom - 28/);
   assert.match(metadata, /generateMetadata/);
   assert.match(metadata, /summary_large_image/);
   assert.match(og, /ImageResponse/);

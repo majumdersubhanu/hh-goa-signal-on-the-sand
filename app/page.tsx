@@ -265,7 +265,12 @@ export default function Home() {
     ctx.fillText(builder.crew, x, 612);
     ctx.fillStyle = "#092f25"; ctx.fillRect(x, 655, 620, 78);
     ctx.fillStyle = "#ffd900"; ctx.font = "900 28px Arial Black"; ctx.fillText(`${currentId}  ·  #FRAMEINGOA`, x + 26, 705);
-    ctx.fillStyle = "#092f25"; ctx.font = "900 24px Arial Black"; ctx.fillText("HACKER HOUSE GOA · 2026 · BUILT IN PUBLIC", pad + 48, height - 72);
+    const cardBottom = height - pad;
+    const footerRuleY = cardBottom - 70;
+    const footerBaseline = cardBottom - 28;
+    ctx.strokeStyle = "#092f25"; ctx.lineWidth = 3; ctx.setLineDash([12, 8]);
+    ctx.beginPath(); ctx.moveTo(pad + 48, footerRuleY); ctx.lineTo(width - pad - 48, footerRuleY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#092f25"; ctx.font = "900 22px Arial Black"; ctx.fillText("HACKER HOUSE GOA · 2026 · BUILT IN PUBLIC", pad + 48, footerBaseline);
     return canvas;
   }, [builder, currentClass, currentId, format, social]);
 
