@@ -202,6 +202,7 @@ function SignalObject(props: BeachSceneProps) {
   const texture = useSignalTexture(props);
   const { size } = useThree();
   const compact = size.width < 760;
+  const narrow = size.width < 520;
 
   useEffect(() => {
     document.body.style.cursor = hovered ? "grab" : "default";
@@ -211,8 +212,8 @@ function SignalObject(props: BeachSceneProps) {
   useFrame((state) => {
     if (!group.current) return;
     const time = state.clock.elapsedTime;
-    const targetX = compact ? 0.45 : 2.25;
-    const targetY = compact ? -1.45 : 0.15;
+    const targetX = compact ? (narrow ? 0.72 : 1.25) : 2.35;
+    const targetY = compact ? (narrow ? -0.62 : -0.05) : 0.72;
     group.current.position.x = THREE.MathUtils.lerp(group.current.position.x, targetX, 0.055);
     group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, targetY + Math.sin(time * 1.35) * 0.09, 0.075);
     group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, state.pointer.y * -0.13 + Math.sin(time) * 0.025, 0.07);
@@ -223,7 +224,7 @@ function SignalObject(props: BeachSceneProps) {
   return (
     <group
       ref={group}
-      scale={compact ? 0.72 : 0.9}
+      scale={compact ? (narrow ? 0.48 : 0.5) : 0.78}
       onClick={(event) => { event.stopPropagation(); setFlipped((value) => !value); }}
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
       onPointerOut={() => setHovered(false)}
@@ -234,7 +235,7 @@ function SignalObject(props: BeachSceneProps) {
       </mesh>
       <mesh position={[0, 0, 0.086]}>
         <planeGeometry args={[3.3, 4.14]} />
-        <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : COLORS.green} roughness={0.68} />
+        <meshBasicMaterial key={texture?.uuid ?? "signal-loading"} map={texture ?? undefined} color={texture ? "#ffffff" : COLORS.green} toneMapped={false} />
       </mesh>
       <mesh position={[0, 0, -0.086]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[3.3, 4.14]} />

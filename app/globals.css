@@ -33,10 +33,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   mix-blend-mode: multiply;
 }
 
-.webgl-stage { position: fixed; inset: 0; z-index: -2; background: var(--green); }
+.webgl-stage { position: fixed; inset: 0; z-index: 0; background: var(--green); }
 .webgl-stage canvas { display: block; width: 100% !important; height: 100% !important; }
 .webgl-fallback { position: absolute; inset: 0; display: grid; place-items: end center; padding: 40px; background: linear-gradient(var(--green), var(--water)); color: var(--yellow); text-align: center; }
-.scene-loader { position: fixed; inset: 0; z-index: -2; display: grid; place-items: center; background: var(--green); color: var(--yellow); }
+.scene-loader { position: fixed; inset: 0; z-index: 0; display: grid; place-items: center; background: var(--green); color: var(--yellow); }
 .scene-loader span { padding: 10px 14px; border: 3px solid var(--ink); background: var(--pink); color: var(--paper); font-size: 9px; font-weight: 900; box-shadow: 6px 6px 0 var(--ink); animation: loader-step .7s steps(2,end) infinite alternate; }
 
 .topbar {
@@ -69,8 +69,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   align-items: center;
   min-height: 100svh;
   padding: 92px clamp(20px, 5vw, 76px) 52px;
+  pointer-events: none;
 }
-.hero__copy { width: min(760px, 58vw); padding: 24px 52px 28px 0; background: linear-gradient(90deg, rgba(11,104,57,.97) 0%, rgba(11,104,57,.9) 66%, rgba(11,104,57,0) 100%); }
+.hero__copy { width: min(760px, 58vw); padding: 24px 52px 28px 0; background: linear-gradient(90deg, rgba(11,104,57,.97) 0%, rgba(11,104,57,.9) 66%, rgba(11,104,57,0) 100%); pointer-events: auto; }
 .kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 10px; color: var(--yellow); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
 .kicker::before { content: ""; width: 48px; height: 5px; background: var(--pink); transform: skewX(-18deg); }
 .hero h1 { margin: 0; line-height: .76; text-transform: uppercase; }
@@ -112,6 +113,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   min-height: 110svh;
   padding: 110px clamp(20px, 6vw, 92px) 90px;
   background: linear-gradient(90deg, rgba(4,61,36,.96) 0%, rgba(4,61,36,.88) 46%, rgba(4,61,36,.12) 74%, transparent 100%);
+  pointer-events: none;
 }
 .checkin.is-dropping .checkin-panel { outline: 10px solid var(--yellow); outline-offset: 7px; transform: rotate(.3deg) translateY(-8px); }
 .checkin-panel {
@@ -123,6 +125,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   box-shadow: 16px 18px 0 var(--ink), 24px 27px 0 var(--pink);
   clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0 100%, 0 20px);
   transition: transform .25s ease, outline .2s ease;
+  pointer-events: auto;
 }
 .checkin-panel::before {
   content: "";
