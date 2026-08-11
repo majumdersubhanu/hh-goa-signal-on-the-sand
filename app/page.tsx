@@ -335,13 +335,12 @@ export default function Home() {
       </header>
 
       <section className="world" aria-label="Your live builder signal on a Goa beach">
-        <div className="sun" aria-hidden="true" />
-        <div className="cloud cloud-one" aria-hidden="true">☁</div>
-        <div className="cloud cloud-two" aria-hidden="true">☁</div>
+        <div className="goa-world-plate" aria-hidden="true" />
+        <div className="night-lights" aria-hidden="true">{Array.from({ length: 9 }).map((_, index) => <i key={index} />)}</div>
         <div className="world-copy">
-          <span className="eyebrow">TOUCHDOWN: CANDOLIM, GOA</span>
+          <span className="eyebrow">GOA: BALCÃO TO BEACH SHACK</span>
           <h1>FIND YOUR<br /><em>SIGNAL.</em></h1>
-          <p>From Mopa to the build floor.<br />One photo. Four tiny decisions. Your people.</p>
+          <p>Old-world arches. Arabian Sea. Fish curry rice.<br />Then the lights come on—and we build.</p>
         </div>
         <div className="goa-postmark" aria-hidden="true"><span>SUSEGAD<br />MODE</span><b>GOA<br />’26</b></div>
         <div className="azulejo-rail" aria-hidden="true">{Array.from({ length: 9 }).map((_, index) => <i key={index} />)}</div>
@@ -364,6 +363,7 @@ export default function Home() {
           <span>{isFlipped ? "SEE THE FACE" : "FLIP FOR THE SIGNAL"}</span><b>↻</b>
         </button>
         <div className="shoreline" aria-hidden="true"><span /><span /><span /></div>
+        <div className="goa-spectrum" aria-hidden="true"><span>PORTUGUESE BALCÃO</span><i /><span>ARABIAN SEA</span><i /><span>NIGHT SHIFT</span><i /><span>FISH THALI</span></div>
         <div className="wayfinding" aria-hidden="true"><b>← MANDOVI</b><b>MOPA 34 KM ↑</b><b>BUILD ZONE →</b></div>
       </section>
 

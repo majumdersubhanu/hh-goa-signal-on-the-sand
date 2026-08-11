@@ -37,7 +37,12 @@ button { color: inherit; }
 .guide-button span { margin-left: 12px; }
 
 .world { position: relative; overflow: hidden; min-height: 340px; background: var(--green); border-bottom: var(--line); isolation: isolate; }
-.world::before { content: ""; position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(rgba(0,0,0,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.09) 1px, transparent 1px); background-size: 18px 18px; transform: perspective(500px) rotateX(2deg) scale(1.05); }
+.world::before { content: ""; position: absolute; z-index: 1; inset: 0; opacity: .12; pointer-events: none; background-image: linear-gradient(rgba(0,0,0,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.09) 1px, transparent 1px); background-size: 18px 18px; transform: perspective(500px) rotateX(2deg) scale(1.05); }
+.goa-world-plate { position: absolute; z-index: 0; inset: 0; background: var(--green) url("/goa-world.png") center center / cover no-repeat; filter: saturate(1.08) contrast(1.02); transform: scale(1.015); animation: platebreath 8s ease-in-out infinite alternate; }
+.goa-world-plate::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,82,52,.96) 0%, rgba(7,82,52,.83) 22%, rgba(7,82,52,.28) 41%, rgba(9,47,37,.04) 66%, rgba(14,17,49,.16) 100%); }
+.night-lights { position: absolute; z-index: 3; top: 10%; right: 2%; width: 26%; height: 46px; display: flex; justify-content: space-around; align-items: flex-start; transform: rotate(3deg); border-top: 2px solid rgba(255,248,230,.7); filter: drop-shadow(0 0 8px rgba(255,79,135,.75)); }
+.night-lights i { width: 12px; height: 17px; border: 2px solid var(--ink); border-radius: 50% 50% 45% 45%; background: var(--yellow); animation: nightglow 1.8s ease-in-out infinite alternate; }
+.night-lights i:nth-child(3n) { background: var(--pink); animation-delay: -.7s; }.night-lights i:nth-child(3n + 2) { background: var(--aqua); animation-delay: -1.2s; }
 .sun { position: absolute; width: min(20vw, 250px); aspect-ratio: 1; border: var(--line); background: var(--yellow); border-radius: 50%; top: 18%; right: 8%; box-shadow: 12px 12px 0 rgba(9,47,37,.2); animation: sunbob 5s ease-in-out infinite; }
 .cloud { color: var(--cream); position: absolute; font-size: clamp(50px, 8vw, 120px); opacity: .8; line-height: .2; filter: drop-shadow(4px 5px 0 rgba(9,47,37,.23)); animation: drift 13s ease-in-out infinite alternate; }
 .cloud-one { top: 20%; left: 32%; }
@@ -60,6 +65,8 @@ button { color: inherit; }
 .flip-hint:hover b { transform: rotate(180deg); }
 .shoreline { position: absolute; left: -2%; right: -2%; height: 70px; bottom: -34px; transform: rotate(-1deg); z-index: 3; background: var(--aqua); border: var(--line); }
 .shoreline span { display: block; height: 14px; border-top: 3px solid rgba(9,47,37,.5); margin-top: 8px; transform: skewX(-12deg); }
+.goa-spectrum { position: absolute; z-index: 8; right: 3.2%; bottom: 4%; display: flex; align-items: center; gap: 8px; background: rgba(255,248,230,.9); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 7px 9px; transform: rotate(-1deg); }
+.goa-spectrum span { font-size: 7px; font-weight: 900; letter-spacing: .05em; }.goa-spectrum i { width: 5px; height: 5px; border-radius: 50%; background: var(--pink); }
 .wayfinding { position: absolute; z-index: 6; left: 38%; bottom: 11%; display: flex; gap: 7px; transform: rotate(-2deg); }
 .wayfinding b { padding: 6px 9px; border: 2px solid var(--ink); background: var(--sand); font-size: 9px; }
 .wayfinding b:nth-child(2) { background: var(--azulejo); color: var(--cream); transform: rotate(-2deg); }
@@ -152,6 +159,9 @@ button { color: inherit; }
 @keyframes drift { to { transform: translateX(28px); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes panelin { from { opacity: 0; transform: translateY(18px) skewY(.5deg); } to { opacity: 1; transform: none; } }
+@keyframes platebreath { to { transform: scale(1.035) translateX(-.4%); } }
+@keyframes nightglow { to { transform: translateY(3px) scale(.78); opacity: .62; box-shadow: 0 0 20px currentColor; } }
+@keyframes goapan { from { background-position: left center; } to { background-position: right center; } }
 
 @media (max-width: 1020px) {
   .experience { grid-template-rows: 62px minmax(380px, 51svh) auto; }
@@ -173,6 +183,9 @@ button { color: inherit; }
   .live-badge { display: none; }
   .guide-button { padding: 7px 9px; font-size: 9px; }
   .world { height: 410px; min-height: 410px; }
+  .goa-world-plate { background-size: auto 100%; background-position: left center; animation: goapan 18s ease-in-out infinite alternate; transform: none; }
+  .goa-world-plate::after { background: linear-gradient(90deg, rgba(7,82,52,.9), rgba(7,82,52,.24) 68%, rgba(9,47,37,.06)); }
+  .night-lights { width: 46%; top: 8%; right: -2%; }
   .world-copy { z-index: 7; left: 15px; top: 22px; transform: none; width: 60vw; }
   .world-copy .eyebrow { padding: 4px 6px; font-size: 7px; box-shadow: 2px 2px 0 var(--ink); }
   .world-copy h1 { margin: 11px 0 0; font-size: clamp(43px, 14.5vw, 70px); text-shadow: 4px 4px 0 var(--ink); }
@@ -188,6 +201,7 @@ button { color: inherit; }
   .wayfinding { left: 14px; bottom: 25px; }
   .wayfinding b { font-size: 7px; padding: 4px 6px; }
   .wayfinding b:nth-child(2) { display: none; }
+  .goa-spectrum { display: none; }
   .dock { min-height: calc(100svh - 468px); display: grid; grid-template-rows: 51px auto 29px; }
   .progress { grid-template-columns: repeat(4, 1fr); position: sticky; top: 58px; z-index: 20; }
   .progress button { min-width: 0; justify-content: center; padding: 0; gap: 0; }
@@ -227,6 +241,7 @@ button { color: inherit; }
   .experience { padding-top: 48px; display: grid; grid-template-columns: 46% 54%; grid-template-rows: calc(100svh - 48px); height: 100svh; overflow: hidden; }
   .topbar { height: 48px; }
   .world { grid-column: 1; grid-row: 1; height: calc(100svh - 48px); min-height: 0; border-bottom: 0; border-right: var(--line); }
+  .goa-world-plate { background-size: auto 100%; animation: goapan 20s ease-in-out infinite alternate; transform: none; }
   .world-copy { left: 13px; top: 14px; width: 87%; transform: none; }
   .world-copy h1 { font-size: clamp(32px, 5.2vw, 44px); }
   .world-copy p { display: block; margin-top: 9px; padding: 6px 7px; font-size: 7px; line-height: 1.35; width: max-content; }

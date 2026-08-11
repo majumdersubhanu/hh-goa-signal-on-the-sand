@@ -25,7 +25,7 @@ test("server-renders the public four-beat HH Goa arrival", async () => {
   const html = await response.text();
   assert.match(html, /<title>Signal on the Sand — HH Goa 2026<\/title>/i);
   assert.match(html, /FIND YOUR/);
-  assert.match(html, /TOUCHDOWN: CANDOLIM, GOA/);
+  assert.match(html, /GOA: BALCÃO TO BEACH SHACK/);
   assert.match(html, /SHOW US/);
   assert.match(html, /DROP \/ TAP TO UPLOAD/);
   assert.match(html, /FIELD GUIDE/);
@@ -54,6 +54,8 @@ test("keeps photos local and ships the required output and sharing paths", async
   assert.match(css, /orientation: landscape/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /azulejo-rail/);
+  assert.match(css, /goa-world\.png/);
+  assert.match(css, /goapan/);
   assert.match(scene, /QRcode|QRCode/i);
   assert.match(scene, /GoanHouse/);
   assert.match(scene, /FishingBoat/);

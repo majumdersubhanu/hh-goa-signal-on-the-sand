@@ -233,8 +233,8 @@ function World({ props }: { props: Props }) {
     <Palm position={[4.15, -1.9, -2]} scale={0.68} />
     <Robot position={[3.2, -1.35, 0.2]} />
     <Laptop position={[-2.9, -1.2, 1]} />
-    <mesh position={[0, -2.05, -0.5]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 8, 16, 8]} /><meshStandardMaterial color="#f6bd54" roughness={1} flatShading /></mesh>
-    <mesh position={[0, -1.98, -4.6]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 5]} /><meshStandardMaterial color="#65cfc7" transparent opacity={0.75} metalness={0.05} roughness={0.25} /></mesh>
+    <mesh position={[0, -2.05, -0.5]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 8, 16, 8]} /><meshStandardMaterial color="#f6bd54" transparent opacity={.16} depthWrite={false} roughness={1} flatShading /></mesh>
+    <mesh position={[0, -1.98, -4.6]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[16, 5]} /><meshStandardMaterial color="#65cfc7" transparent opacity={0.14} depthWrite={false} metalness={0.05} roughness={0.25} /></mesh>
     {[-4.8, -3.7, 3.8, 4.9].map((x, i) => <mesh key={x} position={[x, -1.6 + i % 2 * 0.1, 1.4 - i * 0.3]} rotation={[0.4, i, 0.2]}><icosahedronGeometry args={[0.22 + i * 0.025, 0]} /><meshStandardMaterial color={i % 2 ? "#ff4f87" : "#ffd900"} flatShading /></mesh>)}
   </>;
 }
