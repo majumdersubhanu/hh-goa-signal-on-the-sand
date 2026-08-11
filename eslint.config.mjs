@@ -36,6 +36,13 @@ const eslintConfig = defineConfig([
       },
     },
   },
+  {
+    files: ["app/beach-scene.tsx"],
+    rules: {
+      "react/no-unknown-property": "off",
+      "react-hooks/immutability": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
