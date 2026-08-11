@@ -159,7 +159,7 @@ function useSignalTexture(props: BeachSceneProps) {
       context.fillRect(42, 598, 270, 42);
       context.fillStyle = COLORS.paper;
       context.font = "700 20px monospace";
-      context.fillText((props.energy || "BAREFOOT SHIPPING").toUpperCase().slice(0, 22), 57, 627);
+      context.fillText((props.energy || "HOTSPOT HUNTER").toUpperCase().slice(0, 22), 57, 627);
 
       context.fillStyle = COLORS.paper;
       context.font = "900 76px 'Bowlby One SC', sans-serif";
@@ -212,8 +212,8 @@ function SignalObject(props: BeachSceneProps) {
   useFrame((state) => {
     if (!group.current) return;
     const time = state.clock.elapsedTime;
-    const targetX = compact ? (narrow ? 0.72 : 1.25) : 2.35;
-    const targetY = compact ? (narrow ? -0.62 : -0.05) : 0.72;
+    const targetX = compact ? (narrow ? 0.28 : 0.38) : 0.52;
+    const targetY = compact ? (narrow ? -0.2 : 0) : 0.18;
     group.current.position.x = THREE.MathUtils.lerp(group.current.position.x, targetX, 0.055);
     group.current.position.y = THREE.MathUtils.lerp(group.current.position.y, targetY + Math.sin(time * 1.35) * 0.09, 0.075);
     group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, state.pointer.y * -0.13 + Math.sin(time) * 0.025, 0.07);
@@ -224,7 +224,7 @@ function SignalObject(props: BeachSceneProps) {
   return (
     <group
       ref={group}
-      scale={compact ? (narrow ? 0.48 : 0.5) : 0.78}
+      scale={compact ? (narrow ? 0.48 : 0.56) : 0.7}
       onClick={(event) => { event.stopPropagation(); setFlipped((value) => !value); }}
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
       onPointerOut={() => setHovered(false)}
@@ -416,8 +416,6 @@ function World(props: BeachSceneProps) {
   const compact = size.width < 760;
   return (
     <>
-      <color attach="background" args={[COLORS.green]} />
-      <fog attach="fog" args={[COLORS.green, 10, 22]} />
       <ambientLight intensity={1.65} color="#fff5d7" />
       <directionalLight castShadow position={[4, 7, 5]} intensity={3.1} color={COLORS.yellow} shadow-mapSize={[1024, 1024]} />
       <pointLight position={[-4, 1, 2]} intensity={12} distance={8} color={COLORS.pink} />
@@ -453,7 +451,7 @@ export function BeachScene(props: BeachSceneProps) {
       <Canvas
         camera={{ position: [0, 0.45, 10], fov: 38, near: 0.1, far: 40 }}
         dpr={[1, 1.6]}
-        gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         shadows="soft"
         fallback={<div className="webgl-fallback">Your signal is still ready—this device is showing the lightweight version.</div>}
       >

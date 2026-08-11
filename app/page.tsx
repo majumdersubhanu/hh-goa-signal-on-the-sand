@@ -48,8 +48,8 @@ const BUILDER_CLASSES = [
   "BAREFOOT FOUNDER",
 ];
 
-const ENERGIES = ["Barefoot shipping", "Chai-fuelled", "Monsoon mode", "Sunset sprint"];
-const RITUALS = ["Git push & pray", "One last coffee", "Walk by the water", "Play the launch song"];
+const ENERGIES = ["Hotspot hunter", "Offline architect", "Cable whisperer", "Morale department"];
+const RITUALS = ["Debugging barefoot", "Chasing chai", "Pitching to strangers", "Watching the tide"];
 
 const COLORS = {
   green: "#0b6839",
@@ -67,8 +67,8 @@ const starterBuilder = (id: number): Builder => ({
   name: "",
   stack: "",
   mission: "",
-  energy: "Barefoot shipping",
-  ritual: "Git push & pray",
+  energy: "Hotspot hunter",
+  ritual: "Debugging barefoot",
   photo: "",
   fileName: "",
   zoom: 1,
@@ -89,10 +89,23 @@ function getBuilderClass(builder: Builder) {
 }
 
 function getAccent(energy: string) {
-  if (energy === "Monsoon mode") return COLORS.water;
-  if (energy === "Sunset sprint") return COLORS.coral;
-  if (energy === "Chai-fuelled") return COLORS.yellow;
+  if (energy === "Offline architect") return COLORS.water;
+  if (energy === "Cable whisperer") return COLORS.coral;
+  if (energy === "Morale department") return COLORS.yellow;
   return COLORS.pink;
+}
+
+function PalmMark({ side }: { side: "left" | "right" }) {
+  return (
+    <span className={`palm palm--${side}`} aria-hidden="true">
+      <i className="palm__trunk" />
+      <i className="palm__leaf palm__leaf--1" />
+      <i className="palm__leaf palm__leaf--2" />
+      <i className="palm__leaf palm__leaf--3" />
+      <i className="palm__leaf palm__leaf--4" />
+      <i className="palm__leaf palm__leaf--5" />
+    </span>
+  );
 }
 
 function loadImage(source: string) {
@@ -455,25 +468,39 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top" aria-labelledby="page-title">
+        <div className="illustrated-world" aria-hidden="true">
+          <div className="sun-block">GOA</div>
+          <div className="cloud cloud--one"><span>WIFI?</span></div>
+          <div className="cloud cloud--two"><span>SHIP.</span></div>
+          <div className="horizon">
+            <i className="wave wave--one" />
+            <i className="wave wave--two" />
+            <i className="wave wave--three" />
+          </div>
+          <div className="shore" />
+          <PalmMark side="left" />
+          <PalmMark side="right" />
+          <div className="beach-hut"><i /><b>BUILD<br />HERE</b></div>
+          <div className="doodle doodle--spark">✦</div>
+          <div className="doodle doodle--code">&lt;/&gt;</div>
+        </div>
         <div className="hero__copy">
-          <p className="kicker">TASK 01 · YOUR ARRIVAL RITUAL</p>
+          <p className="kicker">TASK 01 · SEND A SIGNAL FROM THE SAND</p>
           <h1 id="page-title">
-            <span className="hero__make">MAKE YOUR</span>
-            <span className="hero__signal" aria-label="Signal">
-              {"SIGNAL".split("").map((letter, index) => <i key={letter + index} style={{ "--letter": index } as React.CSSProperties}>{letter}</i>)}
-            </span>
+            <span className="hero__make">LESS NOISE.</span>
+            <span className="hero__signal"><i>MAKE YOUR</i><b>SIGNAL.</b></span>
           </h1>
           <div className="hero-note">
-            <strong>DROP A PHOTO.</strong>
-            <span>Answer the beach check-in, meet your strange new builder class, and send your signal toward Goa.</span>
+            <strong>YOUR BEACH PASS, NOT A FORM.</strong>
+            <span>Drop a face, answer five mildly revealing questions, and let the beach decide what kind of builder just landed.</span>
           </div>
           <button className="enter-button" onClick={() => checkinRef.current?.scrollIntoView({ behavior: "smooth" })} type="button">
-            ENTER THE BUILD STATION <span>↓</span>
+            START THE CHECK-IN <span>↓</span>
           </button>
         </div>
         <div className="scene-instruction" aria-hidden="true">
-          <span>MOVE TO BEND THE LIGHT</span>
-          <span>CLICK THE SIGNAL TO FLIP IT</span>
+          <span>THIS IS THE ID YOU’RE MAKING</span>
+          <span>MOVE TO TILT · CLICK TO FLIP</span>
         </div>
       </section>
 
@@ -488,8 +515,14 @@ export default function Home() {
       >
         <div className="checkin-panel">
           <div className="panel-heading">
-            <div><small>BEACH CHECK-IN</small><h2>WHO JUST LANDED?</h2></div>
+            <div><small>BEACH CHECK-IN · TAKES ABOUT A MINUTE</small><h2>WHO JUST LANDED?</h2></div>
             <b>{String(activeId).padStart(2, "0")}/{String(builders.length).padStart(2, "0")}</b>
+          </div>
+
+          <div className="journey-strip" aria-label="Three-step builder ID process">
+            <span><b>01</b><i>DROP A FACE</i><small>Processed only here</small></span>
+            <span><b>02</b><i>CONFESS A LITTLE</i><small>Five playful prompts</small></span>
+            <span><b>03</b><i>CLAIM THE SIGNAL</i><small>Download or share</small></span>
           </div>
 
           <div className="builder-tabs" aria-label="Crew members">
@@ -527,27 +560,27 @@ export default function Home() {
 
           <div className="question-grid">
             <label className="question question--name">
-              <span>WHAT DO WE SHOUT WHEN YOUR DEMO WORKS?</span>
-              <input maxLength={18} onChange={(event) => updateBuilder({ name: event.target.value })} placeholder="Your name" value={activeBuilder.name} />
+              <span>WHAT SHOULD THE BEACH SHOUT WHEN YOU ARRIVE?</span>
+              <input maxLength={18} onChange={(event) => updateBuilder({ name: event.target.value })} placeholder="Name / alias" value={activeBuilder.name} />
             </label>
             <label className="question question--stack">
-              <span>WHAT KEEPS YOUR TERMINAL GLOWING AFTER MIDNIGHT?</span>
-              <input maxLength={34} onChange={(event) => updateBuilder({ stack: event.target.value })} placeholder="AI, Rust, pixels, questionable APIs…" value={activeBuilder.stack} />
+              <span>WHAT’S ACTUALLY IN YOUR BUILD BAG?</span>
+              <input maxLength={34} onChange={(event) => updateBuilder({ stack: event.target.value })} placeholder="Agents, pixels, duct tape, Rust…" value={activeBuilder.stack} />
             </label>
             <label className="question question--mission">
-              <span>WHAT ARE YOU HERE TO CAUSE?</span>
-              <textarea maxLength={52} onChange={(event) => updateBuilder({ mission: event.target.value })} placeholder="A tiny description of your beautiful trouble" rows={2} value={activeBuilder.mission} />
+              <span>48 HOURS. ZERO ADULT SUPERVISION. WHAT DO YOU MAKE?</span>
+              <textarea maxLength={52} onChange={(event) => updateBuilder({ mission: event.target.value })} placeholder="Describe your beautiful trouble in one line" rows={2} value={activeBuilder.mission} />
               <small>{activeBuilder.mission.length}/52</small>
             </label>
           </div>
 
           <fieldset className="choice-question">
-            <legend>PICK YOUR BEACH-SIDE BUILD ENERGY</legend>
+            <legend>THE WIFI DIES. WHO DO YOU BECOME?</legend>
             <div>{ENERGIES.map((energy) => <button className={activeBuilder.energy === energy ? "is-active" : ""} key={energy} onClick={() => updateBuilder({ energy })} type="button">{energy}</button>)}</div>
           </fieldset>
 
           <fieldset className="choice-question">
-            <legend>YOUR TINY RITUAL BEFORE YOU SHIP?</legend>
+            <legend>IT’S 3:07 AM. WHERE DO WE FIND YOU?</legend>
             <div>{RITUALS.map((ritual) => <button className={activeBuilder.ritual === ritual ? "is-active" : ""} key={ritual} onClick={() => updateBuilder({ ritual })} type="button">{ritual}</button>)}</div>
           </fieldset>
 
@@ -574,8 +607,8 @@ export default function Home() {
           <p className="status" role="status" aria-live="polite">{status}</p>
         </div>
         <aside className="checkin-aside" aria-hidden="true">
-          <span>YOUR LIVE SIGNAL IS FLOATING RIGHT THERE.</span>
-          <b>CLICK IT.<br />IT HAS A BACK.</b>
+          <span>THE BEST CREWS START WITH A STRANGE LITTLE INTRODUCTION.</span>
+          <b>ONE CARD.<br />YOUR PEOPLE.</b>
         </aside>
       </section>
 
