@@ -165,7 +165,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .builder-tabs button.is-active { background: var(--ink); color: var(--paper); }
 .builder-tabs .add-builder { border-style: dashed; color: var(--pink); }
 
-.photo-drop { display: flex; align-items: center; gap: 18px; width: 100%; padding: 18px; border: 3px dashed var(--ink); background: var(--yellow); color: var(--ink); cursor: pointer; text-align: left; transition: transform .18s ease; }
+.photo-drop { position: relative; display: flex; align-items: center; gap: 18px; width: 100%; padding: 18px 42px 18px 18px; overflow: hidden; border: 3px dashed var(--ink); background: var(--yellow); color: var(--ink); cursor: pointer; text-align: left; transition: transform .18s ease; }
+.photo-drop::after { content: "DROP / DEVELOP / DANCE"; position: absolute; right: -50px; top: 50%; width: 150px; padding: 5px; border-block: 2px solid var(--ink); background: var(--water); font-size: 7px; font-weight: 900; transform: translateY(-50%) rotate(90deg); }
 .photo-drop:hover { transform: rotate(-.5deg) scale(1.01); }
 .photo-drop__plus { display: grid; place-items: center; width: 58px; height: 58px; flex: 0 0 auto; border: 4px solid var(--ink); background: var(--pink); color: var(--paper); font-family: var(--font-funk), sans-serif; font-size: 45px; line-height: 1; }
 .photo-drop > span:last-child { display: grid; gap: 3px; }

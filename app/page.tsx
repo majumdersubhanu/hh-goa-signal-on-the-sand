@@ -152,6 +152,20 @@ function drawFrameDoodles(
   context.strokeStyle = COLORS.ink;
   context.lineWidth = 5 * unit;
 
+  // Festival rails make the frame feel assembled, not outlined.
+  context.fillStyle = accent;
+  context.fillRect(x - 5 * unit, y + height * .26, 13 * unit, height * .31);
+  context.fillStyle = COLORS.yellow;
+  context.fillRect(x + width - 8 * unit, y + height * .18, 13 * unit, height * .22);
+  for (let index = 0; index < 7; index += 1) {
+    context.fillStyle = index % 3 === 0 ? COLORS.pink : index % 3 === 1 ? COLORS.yellow : COLORS.water;
+    context.save();
+    context.translate(x + width * .18 + index * width * .085, y - 7 * unit);
+    context.rotate(index % 2 ? .12 : -.12);
+    context.fillRect(0, 0, 24 * unit, 16 * unit);
+    context.restore();
+  }
+
   // Isometric build cube, half on the frame and half on the portrait.
   const cubeX = x + width * .77;
   const cubeY = y + height * .08;
@@ -200,6 +214,13 @@ function drawFrameDoodles(
     context.lineTo(x + width * .62 + index * 18 * unit + 11 * unit, y + height * .9 + (index % 2) * 6 * unit);
     context.stroke();
   }
+  context.fillStyle = COLORS.ink;
+  context.font = `900 ${13 * unit}px monospace`;
+  context.save();
+  context.translate(x + width - 13 * unit, y + height * .72);
+  context.rotate(Math.PI / 2);
+  context.fillText("BUILD · BEND · SHIP", 0, 0);
+  context.restore();
   context.restore();
 }
 
