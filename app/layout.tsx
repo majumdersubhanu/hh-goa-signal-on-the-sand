@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Imbue, Victor_Mono } from "next/font/google";
+import { Bowlby_One_SC, Modak, Victor_Mono } from "next/font/google";
 import "./globals.css";
 
-const display = Imbue({
+const display = Bowlby_One_SC({
   variable: "--font-display",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+const funk = Modak({
+  variable: "--font-funk",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -48,7 +55,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${display.variable} ${funk.variable} ${mono.variable}`}>{children}</body>
     </html>
   );
 }
