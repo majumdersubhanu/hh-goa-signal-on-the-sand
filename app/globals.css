@@ -277,12 +277,13 @@ footer { position: relative; z-index: 8; display: flex; justify-content: space-b
 
 @media (max-height: 720px) and (min-width: 650px) {
   .hero { min-height: 720px; align-items: flex-start; padding-top: 78px; padding-bottom: 24px; }
-  .hero__copy { padding-top: 8px; }
+  .hero__copy { position: relative; z-index: 7; width: min(720px, 91vw); padding-top: 8px; }
   .kicker { margin-bottom: 5px; }
   .hero__make { font-size: min(11vh, 76px); }
   .hero__signal { font-size: min(19vh, 126px); }
-  .hero-note { margin-top: 12px; }
-  .enter-button { margin-top: 13px; min-height: 42px; padding-block: 9px; }
+  .hero-note { position: relative; z-index: 8; grid-template-columns: auto minmax(0, 1fr); width: min(590px, 88vw); margin-top: 12px; background: var(--paper); }
+  .hero-note span { min-width: 0; overflow-wrap: anywhere; }
+  .enter-button { position: relative; z-index: 8; margin-top: 13px; min-height: 42px; padding-block: 9px; }
   .scene-instruction { bottom: 14px; }
 }
 
